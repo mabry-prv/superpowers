@@ -1,9 +1,9 @@
 {
-  "name": "superpowers-dev",
-  "description": "Development marketplace for Superpowers core skills library",
+  "name": "superpowers-personal",
+  "description": "Personal fork of Superpowers core skills for Claude Code",
   "owner": {
-    "name": "Jesse Vincent",
-    "email": "jesse@fsck.com"
+    "name": "Marcin",
+    "email": "mabry.ai@proton.me"
   },
   "plugins": [
     {
@@ -12,8 +12,8 @@
       "version": "5.1.0",
       "source": "./",
       "author": {
-        "name": "Jesse Vincent",
-        "email": "jesse@fsck.com"
+        "name": "Marcin",
+        "email": "mabry.ai@proton.me"
       }
     }
   ]
