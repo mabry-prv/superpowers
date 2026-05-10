@@ -125,6 +125,12 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 - `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
+## Domain-Aware Dispatch (optional)
+
+If the project has the framework's `apps/api/` and `apps/mobile/` layout (typically: a SaaS scaffolded by `superpowers:scaffolding-saas-project`), use `superpowers:dispatching-domain-agents` to pick a domain-specific implementer template before dispatching the Task. It routes the task to `implementer-fastapi` (for `apps/api/**` tasks), `implementer-expo` (for `apps/mobile/**` tasks), or `implementer-default` (for mixed/other paths). Domain templates encode stack-specific patterns the default prompt doesn't (async SQLAlchemy, multi-tenant session factory, expo-router, MobileMCP verification).
+
+When `dispatching-domain-agents` is not active, the default `implementer-prompt.md` above is used directly.
+
 ## Example Workflow
 
 ```
