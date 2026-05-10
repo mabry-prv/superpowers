@@ -7,7 +7,7 @@ This is a personal Claude-Code-only fork of obra/superpowers. The README has the
 - `.claude-plugin/` — Claude Code plugin manifest (`plugin.json`, `marketplace.json`).
 - `hooks/session-start` — bootstraps the `using-superpowers` skill into every session.
 - `hooks/run-hook.cmd` — cross-platform shim (no-op on Unix; harmless to keep).
-- `skills/` — the 14 skills that make up the methodology.
+- `skills/` — the 16 skills that make up the methodology.
 - `tests/claude-code/` — fast skill tests + slow integration tests.
 - `tests/skill-triggering/` — naive-prompt triggering tests.
 - `tests/explicit-skill-requests/` — tests that named skill requests are honored.
