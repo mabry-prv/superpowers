@@ -55,7 +55,11 @@ Task tool (general-purpose):
     3. Migration B (separate release): ALTER to NOT NULL.
     Adding NOT NULL to an existing column without a prior backfill migration
     and without a server-side default fails immediately on any row where the
-    column is NULL.
+    column is NULL. Adding a NEW column with `nullable=False` and a
+    non-constant `server_default` (e.g., `now()`, `gen_random_uuid()`) is
+    just as bad in a different way — it forces a full table rewrite under
+    ACCESS EXCLUSIVE to populate the default. Constant defaults are exempt
+    on Postgres ≥ 11.
 
     **Drop column pattern (safe, two-phase):**
     1. Code deploy: remove all references to the column from application code.
@@ -86,10 +90,24 @@ Task tool (general-purpose):
       (in a separate prior release) that removes all application references,
       the running deployment crashes the moment the migration runs.
 
-    - **Add NOT NULL on an existing column without a server-side default
-      and without a prior backfill migration.** Any row where the column is
-      NULL causes the ALTER to fail immediately or leaves the DB in a
-      partially migrated state.
+    - **Add NEW column with `nullable=False` and a non-constant
+      `server_default` on a large table.** Patterns like
+      `op.add_column(t, sa.Column(..., nullable=False, server_default=sa.text("now()")))`
+      or `server_default=sa.text("gen_random_uuid()")`,
+      `uuid_generate_v4()`. Any non-constant default forces Postgres to
+      rewrite every row to populate the value, holding ACCESS EXCLUSIVE on
+      the table for the duration. On a multi-million-row high-write table
+      this is hours of full-table downtime — every read and write blocks.
+      Constant defaults (literal numbers, literal strings, `false`) on
+      Postgres ≥ 11 do NOT trigger a rewrite — exempt those. Safe pattern:
+      add as nullable, backfill in batches, ALTER to NOT NULL in a later
+      release.
+
+    - **Add or alter an existing column to NOT NULL without a prior
+      backfill migration in a previous release.** Any row where the column
+      is NULL causes the ALTER to fail immediately or leaves the DB in a
+      partially migrated state. Combine with the canonical two-phase
+      pattern above.
 
     - **Migration not reversible AND missing the `# IRREVERSIBLE:` justification
       comment.** Empty, `pass`, or absent `downgrade()` with no documented
@@ -204,5 +222,10 @@ Task tool (general-purpose):
      Release 2 migration: `op.drop_column("users", "display_name")`
      + `op.alter_column("users", "full_name", nullable=False)`.
 
-**Verdict: BLOCKED — 1 Critical finding(s)**
+2. **Add NEW NOT NULL column with non-constant `server_default` on a large table**
+   - `alembic/versions/0003_events_ingested.py:14` — `op.add_column("events", sa.Column("ingested_at", sa.DateTime(), nullable=False, server_default=sa.text("now()")))` on a 100M-row high-write table
+   - Why it matters: the non-constant `now()` default forces Postgres to rewrite every row in `events` to populate the column, holding ACCESS EXCLUSIVE on the table for the duration. On 100M rows this is a multi-hour outage — every read and write to `events` blocks, violating the zero-downtime requirement. (A constant default like `server_default=sa.text("'pending'")` on Postgres ≥ 11 would be exempt.)
+   - Fix: split into the two-phase pattern. Release 1: `op.add_column("events", sa.Column("ingested_at", sa.DateTime(), nullable=True, server_default=sa.text("now()")))` + a resumable batched backfill. Code deploy: writes ingested_at on every insert. Release 2: `op.alter_column("events", "ingested_at", nullable=False)`.
+
+**Verdict: BLOCKED — 2 Critical finding(s)**
 ```
