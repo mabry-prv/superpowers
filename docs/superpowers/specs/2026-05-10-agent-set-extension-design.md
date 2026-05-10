@@ -255,8 +255,12 @@ A missing field would cause the agent to hallucinate output on empty context. Ve
 
 This spec packages three logically separable changes: (a) promoting the three reviewer prompt templates to agent files, (b) adding `planner` and converting brainstorming/writing-plans to dispatch it, and (c) adding `architect` and the implementer escalation hook. They share `agents/README.md` and the consistent dispatch-by-name principle. The implementation plan can sequence them as three phases inside one branch — each phase is independently testable and committable, but they ship together for a coherent end-state.
 
-## Open questions
+## Open questions (resolved during planning)
 
-- **Test runner integration.** Need to confirm `tests/claude-code/run-skill-tests.sh` discovers new test directories by convention; if not, the runner needs explicit additions for each new agent's test set. To verify when the implementation plan is being written.
-- **Architect re-dispatch loop.** When `architect` returns a recommendation that an implementer then acts on, do we re-dispatch the implementer with the architect's recommendation as additional `CONTEXT`, or feed it back through the same implementer turn? Current intent is the former (clean re-dispatch with augmented context); confirm during planning.
-- **Backwards compatibility for `/writing-plans`.** If a user types `/writing-plans` directly (without going through brainstorming), the skill becomes a planner-dispatch. Verify the user invocation flow still works after the skill is converted to a thin wrapper.
+- **Test runner integration.** Resolved: `tests/claude-code/run-skill-tests.sh` uses an explicit `tests=(...)` array (no convention-based discovery). Plan adds one entry per new agent's structural test.
+- **Architect re-dispatch loop.** Resolved: clean re-dispatch with augmented context. Implementer reports `BLOCKED:ARCHITECTURAL` plus a question framing; orchestrator dispatches `architect`; orchestrator re-dispatches the same implementer with the architect's full recommendation appended to the original `CONTEXT` field under a `## Architect's Recommendation` heading. Plan task 12 captures this in `subagent-driven-development/SKILL.md`.
+- **Backwards compatibility for `/writing-plans`.** Resolved: the skill becomes a thin dispatcher (~30 lines) that builds the per-call context block and calls `Task(subagent_type=planner)`. User invocations via `/writing-plans` continue to work — the skill is still user-invocable; the heavy lifting just runs in the subagent now. Plan task 9 captures this.
+
+## Scope adjustment during planning
+
+The spec called for both structural and integration tests for each new agent. The implementation plan delivers structural tests only, with integration tests deferred to a follow-up plan. Rationale: integration tests use `claude -p` (slow, opt-in via `--integration` flag), and most existing skills/agents in the repo have only structural tests today. The structural-test gate is sufficient to ship; integration tests are validation work that can land separately. The follow-up plan is described in the implementation plan's "Deferred Follow-Up" section.
