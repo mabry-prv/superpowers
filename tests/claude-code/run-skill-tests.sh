@@ -57,10 +57,13 @@ while [[ $# -gt 0 ]]; do
             echo "  --help, -h           Show this help"
             echo ""
             echo "Tests:"
-            echo "  test-subagent-driven-development.sh  Test skill loading and requirements"
+            echo "  test-subagent-driven-development.sh           Test skill loading and requirements"
+            echo "  ../multi-angle-review/test-structure.sh       Lint multi-angle-review templates + SKILL.md"
             echo ""
             echo "Integration Tests (use --integration):"
             echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
+            echo "  test-requesting-code-review.sh                   Code-review subagent dispatch"
+            echo "  ../multi-angle-review/test-integration.sh        Reviewer dispatch on composite-bug + composite-clean fixtures"
             exit 0
             ;;
         *)
@@ -71,15 +74,19 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# List of skill tests to run (fast unit tests)
+# List of skill tests to run (fast unit tests).
+# Paths are relative to this script's directory; prefix `../<dir>/` to
+# reach tests outside tests/claude-code/.
 tests=(
     "test-subagent-driven-development.sh"
+    "../multi-angle-review/test-structure.sh"
 )
 
 # Integration tests (slow, full execution)
 integration_tests=(
     "test-subagent-driven-development-integration.sh"
     "test-requesting-code-review.sh"
+    "../multi-angle-review/test-integration.sh"
 )
 
 # Add integration tests if requested
