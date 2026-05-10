@@ -13,3 +13,4 @@ All upstream release notes prior to the fork are at the upstream repo. This file
 - Trimmed `docs/plans/` and `docs/superpowers/{plans,specs}/` (project history not relevant to fork).
 - Trimmed `.version-bump.json` from 6 manifests to 3.
 - Retargeted marketplace metadata at `superpowers-personal`.
+- Added `multi-angle-review` skill: dispatches role-specific reviewer subagents (multitenant-isolation, migration-safety, security) based on diff content. Three reviewer templates ship initially, each pressure-tested against planted-bug + clean counter-fixtures. Integration note added to `requesting-code-review/SKILL.md`. End-to-end test confirmed parallel dispatch + correct aggregation: composite-bug fixture produces 7 Critical findings across 3 reviewers, BLOCKED verdict.
