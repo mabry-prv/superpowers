@@ -87,6 +87,10 @@ You: [Fix progress indicators]
 - Review before merge
 - Review when stuck
 
+## Follow-up: Multi-Angle Review
+
+If the project has the multi-angle-review skill conventions (typically: a multi-tenant SaaS with FastAPI + Postgres + Alembic), after the standard code-reviewer returns APPROVED, run `superpowers:multi-angle-review` as a follow-up. It dispatches role-specific reviewers (multitenant-isolation, migration-safety, security) based on what the diff touches. Critical findings from multi-angle-review block the same way the standard reviewer's Critical findings do.
+
 ## Red Flags
 
 **Never:**
