@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SKILL_DIR="$REPO_ROOT/skills/multi-angle-review"
 SKILL_MD="$SKILL_DIR/SKILL.md"
-TEMPLATES_DIR="$SKILL_DIR/templates"
+AGENTS_DIR="$REPO_ROOT/agents"
 
 passed=0
 failed=0
@@ -49,11 +49,11 @@ echo ""
 
 # --- Skill file presence ------------------------------------------------------
 
-echo "--- Skill files exist ---"
+echo "--- Skill + agent files exist ---"
 assert_file "$SKILL_MD" "SKILL.md"
-assert_file "$TEMPLATES_DIR/reviewer-multitenant-isolation.md" "multitenant-isolation template"
-assert_file "$TEMPLATES_DIR/reviewer-migration-safety.md" "migration-safety template"
-assert_file "$TEMPLATES_DIR/reviewer-security.md" "security template"
+assert_file "$AGENTS_DIR/reviewer-multitenant-isolation.md" "multitenant-isolation agent"
+assert_file "$AGENTS_DIR/reviewer-migration-safety.md" "migration-safety agent"
+assert_file "$AGENTS_DIR/reviewer-security.md" "security agent"
 echo ""
 
 # --- SKILL.md frontmatter & verdict strings -----------------------------------
@@ -70,17 +70,19 @@ echo ""
 
 echo "--- SKILL.md routing table ---"
 # The routing table has a header row + separator + 3 data rows = 5 markdown
-# table lines starting with '|'. Check for at least 3 templates referenced.
-assert_grep "$SKILL_MD" "templates/reviewer-multitenant-isolation.md" "routing references multitenant template"
-assert_grep "$SKILL_MD" "templates/reviewer-migration-safety.md" "routing references migration template"
-assert_grep "$SKILL_MD" "templates/reviewer-security.md" "routing references security template"
+# table lines starting with '|'. Check for all 3 reviewer agent names.
+assert_grep "$SKILL_MD" "\\breviewer-multitenant-isolation\\b" "routing references multitenant agent"
+assert_grep "$SKILL_MD" "\\breviewer-migration-safety\\b" "routing references migration agent"
+assert_grep "$SKILL_MD" "\\breviewer-security\\b" "routing references security agent"
 echo ""
 
 # --- Per-template required sections ------------------------------------------
 
 for t in reviewer-multitenant-isolation reviewer-migration-safety reviewer-security; do
-    f="$TEMPLATES_DIR/$t.md"
+    f="$AGENTS_DIR/$t.md"
     echo "--- $t.md sections ---"
+    assert_grep "$f" "^name: $t$" "$t agent frontmatter name matches filename"
+    assert_grep "$f" "^description: " "$t agent has frontmatter description"
     assert_grep "$f" "## Severity Rules" "$t has Severity Rules section"
     assert_grep "$f" "### Critical" "$t has Critical tier"
     assert_grep "$f" "### Important" "$t has Important tier"
@@ -90,22 +92,26 @@ for t in reviewer-multitenant-isolation reviewer-migration-safety reviewer-secur
     echo ""
 done
 
-# --- Placeholder presence in every template ----------------------------------
+# --- Per-call context contract documented in every agent ---------------------
 
-echo "--- Placeholders ---"
+# After Phase 1.5 refactor: agents document their per-call contract in a
+# "Per-Call Context" section. Placeholder tokens like {DESCRIPTION} are NOT
+# baked into the agent body — they're filled by the orchestrator at dispatch.
+echo "--- Per-call context contract ---"
 for t in reviewer-multitenant-isolation reviewer-migration-safety reviewer-security; do
-    f="$TEMPLATES_DIR/$t.md"
-    assert_grep "$f" '\{DESCRIPTION\}' "$t has {DESCRIPTION}"
-    assert_grep "$f" '\{PLAN_OR_REQUIREMENTS\}' "$t has {PLAN_OR_REQUIREMENTS}"
-    assert_grep "$f" '\{FILES_TO_REVIEW\}' "$t has {FILES_TO_REVIEW}"
+    f="$AGENTS_DIR/$t.md"
+    assert_grep "$f" "## Per-Call Context" "$t documents Per-Call Context"
+    assert_grep "$f" "DESCRIPTION" "$t mentions DESCRIPTION field"
+    assert_grep "$f" "PLAN_OR_REQUIREMENTS" "$t mentions PLAN_OR_REQUIREMENTS field"
+    assert_grep "$f" "FILES_TO_REVIEW" "$t mentions FILES_TO_REVIEW field"
 done
 echo ""
 
-# --- Verdict strings present in every template -------------------------------
+# --- Verdict strings present in every agent ----------------------------------
 
-echo "--- Verdict strings in templates ---"
+echo "--- Verdict strings in agents ---"
 for t in reviewer-multitenant-isolation reviewer-migration-safety reviewer-security; do
-    f="$TEMPLATES_DIR/$t.md"
+    f="$AGENTS_DIR/$t.md"
     assert_grep "$f" 'BLOCKED — N Critical' "$t has BLOCKED verdict"
     assert_grep "$f" 'APPROVED WITH SUGGESTIONS' "$t has APPROVED-WITH-SUGGESTIONS verdict"
     assert_grep "$f" '\*\*Verdict: APPROVED\*\*' "$t has APPROVED verdict"
@@ -114,8 +120,8 @@ echo ""
 
 # --- Severity coverage in security template (Critical #1 regression guard) ---
 
-echo "--- Security template severity coverage (regression guard) ---"
-SEC="$TEMPLATES_DIR/reviewer-security.md"
+echo "--- Security agent severity coverage (regression guard) ---"
+SEC="$AGENTS_DIR/reviewer-security.md"
 assert_grep "$SEC" "path traversal" "security covers path traversal"
 assert_grep "$SEC" "insecure deserialization" "security covers insecure deserialization"
 assert_grep "$SEC" "pickle\\.loads" "security mentions pickle.loads"
@@ -127,8 +133,8 @@ echo ""
 
 # --- Migration-safety NEW-NULL+server_default rule (Critical #2 guard) -------
 
-echo "--- Migration template severity coverage (regression guard) ---"
-MIG="$TEMPLATES_DIR/reviewer-migration-safety.md"
+echo "--- Migration agent severity coverage (regression guard) ---"
+MIG="$AGENTS_DIR/reviewer-migration-safety.md"
 assert_grep "$MIG" "non-constant.+server_default|server_default.+now\\(\\)|gen_random_uuid" "migration covers non-constant server_default rule"
 assert_grep "$MIG" "ACCESS EXCLUSIVE|table rewrite" "migration mentions table-rewrite locking impact"
 echo ""
