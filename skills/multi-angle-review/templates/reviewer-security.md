@@ -81,6 +81,46 @@ Task tool (general-purpose):
     `secrets.token_urlsafe()` or `secrets.token_hex()`. Rolling custom HMAC
     verification instead of using the provider's official SDK method.
 
+    **Path traversal / arbitrary file read**
+    File-serve, download, or attachment endpoints that join user-supplied
+    path segments to a base directory without `os.path.realpath` containment,
+    and any `open()` / `FileResponse` whose path argument flows from user
+    input without an allowlist of permitted filenames. `os.path.join(base,
+    user_path)` does NOT contain — `..` segments escape it.
+
+    **Insecure deserialization (RCE-equivalent)**
+    `pickle.loads`, `pickle.load`, `cPickle.loads`, `yaml.load(...)` without
+    `Loader=yaml.SafeLoader`, `marshal.loads`, `dill.loads`, or
+    `jsonpickle.decode` on attacker-controlled bytes. These formats are
+    Turing-complete instruction streams; deserializing untrusted input is
+    direct remote code execution under the API process.
+
+    **Server-Side Request Forgery (SSRF)**
+    Outbound HTTP / TCP call (`httpx.get`, `requests.get`, `urllib.request`,
+    `socket.connect`) where the destination URL or host comes from user
+    input without an allowlist of trusted hosts and a block on internal
+    ranges (RFC1918, link-local 169.254.0.0/16, loopback, cloud metadata
+    endpoints like 169.254.169.254).
+
+    **XML External Entity (XXE)**
+    XML parsing with `lxml.etree.parse(...)`, `xml.etree.ElementTree.parse`,
+    `xml.dom.minidom.parseString`, or `xmlrpc.client` on user-controlled
+    input without `resolve_entities=False` (lxml) or equivalent entity
+    expansion disabling. Allows file disclosure and SSRF via crafted DTDs.
+
+    **Open redirect**
+    `RedirectResponse` / `redirect()` / `Response(headers={"Location": ...})`
+    where the destination URL flows from user input (`?next=`, `?return_to=`,
+    `?continue=`) without same-origin or allowlist validation. Protocol-
+    relative URLs (`//evil.com/x`) bypass naive `startswith("/")` checks.
+
+    **Catastrophic-backtracking regex (ReDoS)**
+    `re.compile` / `re.match` / `re.search` of a pattern with nested
+    quantifiers (`(a+)+`, `(a|a)+`, `(.*)*`, `([a-z]+)*`) applied to
+    attacker-supplied input on a request path. Causes exponential matcher
+    work that pegs the FastAPI worker; a handful of crafted requests stalls
+    the service.
+
     ## Severity Rules
 
     ### Critical (any of the following — flag every instance)
@@ -111,6 +151,36 @@ Task tool (general-purpose):
       secrets, or webhook signing secrets written as string literals in source
       files (not read from env or config).
 
+    - **Path traversal / arbitrary file read.** A file-serve / download
+      endpoint where the path argument to `open()`, `FileResponse`, or
+      `send_file` is built from user input via `os.path.join(base, user)`
+      with no `os.path.realpath` containment check that the resolved path
+      stays inside `base`. Attacker reads `/etc/passwd`, `.env`, source
+      code, SSH keys.
+
+    - **Insecure deserialization on attacker-controlled bytes.**
+      `pickle.loads(user_bytes)`, `yaml.load(user_str)` (without
+      `Loader=yaml.SafeLoader`), `cPickle.loads`, `marshal.loads`,
+      `dill.loads`, or `jsonpickle.decode` on data sourced from a request
+      body, header, query param, file upload, or any external store. Direct
+      RCE under the API process via `__reduce__` / `__setstate__` gadgets.
+      Treat as Critical even if the endpoint is "test/debug only" — if the
+      route is registered it is reachable.
+
+    - **Server-Side Request Forgery (SSRF).** Outbound HTTP / TCP call
+      where the destination host or URL comes from user input with no
+      allowlist of trusted hosts and no block on RFC1918, link-local,
+      loopback, or cloud-metadata IPs (`169.254.169.254`). Lets an attacker
+      probe the internal network, hit unauthenticated admin services, or
+      exfiltrate cloud IAM credentials.
+
+    - **XML External Entity (XXE) — XML parser with entity expansion
+      enabled on user input.** `lxml.etree.parse(user_xml)` without
+      `resolve_entities=False`, or `xml.etree.ElementTree.parse(user_xml)`
+      on Python versions where entity expansion is on by default. Allows
+      arbitrary local file disclosure and outbound network probes via
+      crafted DTDs.
+
     ### Important (any of the following)
 
     - **Credentials or PII in log statements.** `logger.info(...)` or any log
@@ -136,6 +206,22 @@ Task tool (general-purpose):
       This combination is rejected by browsers and signals a misunderstanding
       of the security boundary; any credential-carrying CORS request will fail
       for legitimate clients.
+
+    - **Open redirect.** `RedirectResponse(url=request.query_params["next"])`
+      or equivalent reflection of a user-controlled URL into a `Location`
+      header without same-origin / allowlist validation. Aids phishing —
+      victim sees the legit domain, completes auth, then bounces to
+      `evil.com` for a credential-harvesting follow-up. Reject anything
+      with a scheme or netloc, and reject `//host/path` (protocol-relative).
+      Promote to Critical when the redirect can carry a session token or
+      one-time code in the URL.
+
+    - **Catastrophic-backtracking regex applied to user input (ReDoS).**
+      A pattern with nested quantifiers (e.g. `(a+)+$`, `([a-z]+)*`) compiled
+      against attacker-supplied request data. Causes exponential matcher
+      work; a few concurrent requests pegs every worker. Promote to Critical
+      when the affected endpoint is unauthenticated (signup, login,
+      password-reset, public form) — unauthenticated DoS is ship-blocking.
 
     ### Suggestion (any of the following)
 
@@ -224,6 +310,11 @@ Task tool (general-purpose):
    - Why it matters: anyone can POST a fake `invoice.paid` event and mark any org as paid without paying
    - Fix: verify with `stripe.Webhook.construct_event(await request.body(), request.headers["stripe-signature"], settings.STRIPE_WEBHOOK_SECRET)`
 
+4. **Path traversal — arbitrary file read**
+   - `app/files.py:24` — `full = os.path.join("/var/app/uploads", filename)` where `filename` comes from `{filename:path}` route parameter without containment
+   - Why it matters: attacker requests `GET /files/../../etc/passwd` and the process returns whatever the API user can read — `/etc/passwd`, source code, `.env` with DB credentials and signing secrets
+   - Fix: `base = os.path.realpath("/var/app/uploads"); full = os.path.realpath(os.path.join(base, filename)); if not full.startswith(base + os.sep): raise HTTPException(404)` — and prefer an allowlist of upload IDs over user-named paths
+
 ### Important (Should Fix)
 
 4. **Credentials in log statement**
@@ -236,5 +327,5 @@ Task tool (general-purpose):
    - Why it matters: Stripe retries on network error; a transient failure causes the org to be marked paid multiple times (or a billing counter to be incremented N times)
    - Fix: insert the event ID into a `StripeEventSeen` table and skip processing if already seen
 
-**Verdict: BLOCKED — 3 Critical finding(s)**
+**Verdict: BLOCKED — 4 Critical finding(s)**
 ```
