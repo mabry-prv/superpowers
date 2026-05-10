@@ -21,11 +21,13 @@ Run multi-angle-review after `requesting-code-review` returns APPROVED. It is a 
 
 Evaluate the diff against each predicate. A predicate matches when its file glob AND any content condition are both true. Multiple predicates can match the same diff — dispatch all matched reviewers.
 
+**Predicates are soft signals — when in doubt, dispatch.** False-positive cost is one extra reviewer run (a few minutes); false-negative cost is a shipped Critical. Be liberal at the routing layer; the reviewer's own severity rules filter out non-issues.
+
 | Trigger | Template | Concern |
 |---|---|---|
-| Diff touches `apps/api/**/*.py` AND introduces or changes a `select()`/`update()`/`delete()`/`db.get()` against an org-scoped model OR a route accessing org-scoped data | `templates/reviewer-multitenant-isolation.md` | Tenant boundary correctness |
-| Diff touches `**/alembic/versions/*.py` (new file or modified) | `templates/reviewer-migration-safety.md` | Production-safe migrations |
-| Diff touches `apps/api/**/auth/**`, `apps/api/**/billing/**`, any new HTTP/webhook handler, any code introducing secret handling, password hashing, SQL composition, command execution | `templates/reviewer-security.md` | Security defects |
+| Diff touches any `**/*.py` AND introduces or changes a `select()`/`update()`/`delete()`/`db.get()` or aggregate (`func.count(...)`, `func.sum(...)`, `func.avg(...)`) against an org-scoped model OR a route/script/worker accessing org-scoped data. Path is not constrained to `apps/api/**` — backfills under `scripts/`, workers under `apps/worker/`, jobs under `apps/jobs/`, or any other location must also fire this reviewer. | `templates/reviewer-multitenant-isolation.md` | Tenant boundary correctness |
+| Diff touches `**/alembic/versions/*.py` (new file or modified). For non-Alembic migrations (raw `*.sql` under `**/migrations/`, other migration tools), dispatch this reviewer with a `non-alembic; reviewer applies general principles` note in `{DESCRIPTION}` — the canonical patterns still apply, but the path-shape assumption doesn't. | `templates/reviewer-migration-safety.md` | Production-safe migrations |
+| Diff touches `**/auth/**`, `**/billing/**`, any new HTTP / webhook handler, OR any `**/*.py` introducing any of: secret handling; password hashing; SQL composition; shell or command execution (`subprocess`, `os.system`); **dynamic code execution** (`eval`, `exec`, `compile`, `__import__`); **deserialization of untrusted bytes** (`pickle.loads`, `yaml.load` without `Loader=yaml.SafeLoader`, `marshal.loads`, `dill.loads`, `jsonpickle.decode`); **redirect or URL construction from user input** (`RedirectResponse`, `redirect`, `Location` header); **regex compilation against user-controlled input**; **XML/HTML parsing** that could expand external entities (`lxml.etree`, `xml.etree`, `xml.dom`); **outbound network calls with a user-controlled host** (`httpx`, `requests`, `urllib.request`, `socket.connect`). | `templates/reviewer-security.md` | Security defects |
 
 ## Process
 
@@ -48,6 +50,8 @@ Fill in each template's placeholders:
 - `{DESCRIPTION}` — brief summary of what was built
 - `{PLAN_OR_REQUIREMENTS}` — plan file path, task text, or requirements
 - `{FILES_TO_REVIEW}` — the file subset relevant to that reviewer (not all changed files — only those that triggered its predicate)
+
+**Before dispatching, scan each assembled prompt for any leftover placeholder.** Grep the prompt text for the regex `\{[A-Z_]+\}`. If any of `{DESCRIPTION}`, `{PLAN_OR_REQUIREMENTS}`, `{FILES_TO_REVIEW}` (or any other `{ALL_CAPS}` token) survives, **refuse to dispatch that reviewer**: surface which placeholder(s) survived, explain that an unfilled placeholder means the reviewer would hallucinate a review on no context, and require the caller to fill them in. This substep is the only mechanical guard between "forgot to substitute" and "reviewer produces a confident review on empty context" — don't skip it.
 
 **5. Wait for all reviewer subagents to return.** Do not aggregate partial results.
 
@@ -102,6 +106,20 @@ digraph flow {
     "Any Important/Suggestion?" -> "Print: APPROVED — clean" [label="no"];
 }
 ```
+
+## Error Handling
+
+Cases where the happy path doesn't apply. Default posture is **fail closed** — if you can't be sure the review actually happened, do not approve.
+
+**Reviewer subagent times out.** Default timeout is 300 s per reviewer. If a Task does not return: print `BLOCKED — reviewer <name> did not return within timeout`, list the verdicts of any reviewers that did complete, and stop. Do not aggregate to APPROVED on a missing reviewer.
+
+**Reviewer template missing or unreadable.** Before dispatch, verify each matched template file exists with `ls`/`Read`. If any read fails: surface the exact path and error, refuse to dispatch the rest, and instruct the user to fix before retrying. Don't skip the broken reviewer and continue with the partial set unless the user explicitly opts in.
+
+**Two reviewers flag the same `file:line` at different severities.** Take the **maximum** severity (Critical > Important > Suggestion) and merge into a single finding annotated `flagged by: <reviewer-1>, <reviewer-2>`. This is a soft rule — use judgment; if the two reviewers describe distinct underlying defects at the same line, keep them as separate findings.
+
+**Reviewer returns a malformed verdict line.** A "well-formed" verdict ends in exactly one of: `BLOCKED — N Critical finding(s)`, `APPROVED WITH SUGGESTIONS`, or `APPROVED`. If the output ends in something else, re-prompt the same reviewer once with: *"Your previous response did not end in one of the three permitted verdict lines. Re-emit the verdict line exactly, without changing your findings."* If the second response is still malformed, treat as `BLOCKED — reviewer <name> output unparseable`.
+
+**Empty diff or no files to review.** Step 3 of Process already handles zero-fire (`no concerns triggered`). If `{FILES_TO_REVIEW}` is empty for a matched reviewer (e.g., the predicate matched but the file subset filters down to nothing), do not dispatch — surface the inconsistency and stop. Do not invent files.
 
 ## Integration with `requesting-code-review`
 
