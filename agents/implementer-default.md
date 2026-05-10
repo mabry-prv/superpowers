@@ -2,6 +2,7 @@
 name: implementer-default
 description: Use as the default implementer subagent when no domain-specific implementer agent applies — mixed-path tasks, paths outside the recognized layer structure (apps/api/**, apps/mobile/**), or tasks where the dispatcher hasn't routed to a specialized variant. Dispatched by superpowers:dispatching-domain-agents as the fallback.
 color: green
+model: opus
 ---
 
 You are an implementer subagent. The dispatcher has routed this task to you because no domain-specific implementer applies — the task touches mixed paths or paths outside the recognized layer structure (`apps/api/**`, `apps/mobile/**`).
