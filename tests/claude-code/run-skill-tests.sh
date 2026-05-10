@@ -74,6 +74,31 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Detect GNU timeout (coreutils). On macOS, this is `gtimeout` after `brew install coreutils`.
+# On Linux, the standard `timeout` is GNU. If neither is present, run tests without a wall-time cap.
+TIMEOUT_BIN=""
+if command -v gtimeout >/dev/null 2>&1; then
+    TIMEOUT_BIN="gtimeout"
+elif command -v timeout >/dev/null 2>&1; then
+    TIMEOUT_BIN="timeout"
+fi
+
+if [ -z "$TIMEOUT_BIN" ]; then
+    echo "WARNING: neither 'gtimeout' nor 'timeout' found; tests will run unbounded."
+    echo "  On macOS, install GNU coreutils: brew install coreutils"
+    echo ""
+fi
+
+# Run a test with the timeout binary if available, otherwise unbounded.
+run_test() {
+    local test_path="$1"
+    if [ -n "$TIMEOUT_BIN" ]; then
+        "$TIMEOUT_BIN" "$TIMEOUT" bash "$test_path"
+    else
+        bash "$test_path"
+    fi
+}
+
 # List of skill tests to run (fast unit tests).
 # Paths are relative to this script's directory; prefix `../<dir>/` to
 # reach tests outside tests/claude-code/.
@@ -126,7 +151,7 @@ for test in "${tests[@]}"; do
     start_time=$(date +%s)
 
     if [ "$VERBOSE" = true ]; then
-        if timeout "$TIMEOUT" bash "$test_path"; then
+        if run_test "$test_path"; then
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo ""
@@ -146,7 +171,7 @@ for test in "${tests[@]}"; do
         fi
     else
         # Capture output for non-verbose mode
-        if output=$(timeout "$TIMEOUT" bash "$test_path" 2>&1); then
+        if output=$(run_test "$test_path" 2>&1); then
             end_time=$(date +%s)
             duration=$((end_time - start_time))
             echo "  [PASS] (${duration}s)"
