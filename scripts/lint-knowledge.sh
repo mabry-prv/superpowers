@@ -87,16 +87,18 @@ fi
 # 6. Soft size cap — entries > 200 words
 while IFS= read -r topic; do
     [ -z "$topic" ] && continue
-    # Split by H3 headings, count words per section
-    awk '
+    # Split by H3 headings, count words per section.
+    # Use process substitution (not a pipe) so the inner `while` runs in the
+    # current shell and `warn()` array modifications persist.
+    while IFS=: read -r f title wc; do
+        warn "oversized entry in $topic (>200 words): $title ($wc words)"
+    done < <(awk '
         /^### / { if (entry) { words=split(entry, _, /[[:space:]]+/); if (words > 200) print FILENAME ":" prev_title ":" words }
                   prev_title=$0; entry=""; next }
         { entry = entry $0 "\n" }
         END { if (entry) { words=split(entry, _, /[[:space:]]+/); if (words > 200) print FILENAME ":" prev_title ":" words }
         }
-    ' "$topic" | while IFS=: read -r f title wc; do
-        warn "oversized entry in $topic (>200 words): $title ($wc words)"
-    done
+    ' "$topic")
 done < <(find "$KNOWLEDGE" -type f -name '*.md' ! -path "$INDEX" ! -path "$META/*")
 
 # 7. Soft topic size cap — > 300 lines
