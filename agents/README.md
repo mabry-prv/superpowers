@@ -32,7 +32,7 @@ Every agent follows the same nine-section structure:
 8. Self-review (where applicable — implementers and planner have it; reviewers and architect generally don't)
 9. Anti-Patterns + Report Format
 
-Reviewers add a `Severity Rules` subsection (Critical / Important / Suggestion) and an `Output Format` block with a verdict line at the end.
+Most reviewers add a `Severity Rules` subsection (Critical / Important / Suggestion) and an `Output Format` block with a verdict line at the end. `reviewer-spec` uses task-shaped categories (Missing / Extra / Misunderstood); `reviewer-code-quality` uses Critical / Important / Minor with a `Ready to merge?` verdict — both deviations are intentional and reflect the per-task review shape.
 
 ## Per-call context contract
 

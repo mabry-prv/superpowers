@@ -63,7 +63,7 @@ digraph brainstorming {
 }
 ```
 
-**The terminal state is invoking writing-plans.** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+**The terminal state is dispatching the planner subagent (via the `superpowers:writing-plans` skill, which is a thin dispatcher).** Do NOT invoke frontend-design, mcp-builder, or any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans, which itself dispatches the planner.
 
 ## The Process
 
@@ -132,7 +132,7 @@ Wait for the user's response. If they request changes, make them and re-run the 
 
 **Implementation:**
 
-- Invoke the writing-plans skill to create a detailed implementation plan
+- Invoke the `superpowers:writing-plans` skill, which dispatches the `planner` subagent to create the implementation plan.
 - Do NOT invoke any other skill. writing-plans is the next step.
 
 ## Key Principles
