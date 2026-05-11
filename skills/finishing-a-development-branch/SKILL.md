@@ -37,7 +37,62 @@ Stop. Don't proceed to Step 2.
 
 **If tests pass:** Continue to Step 2.
 
-### Step 2: Detect Environment
+### Step 2: Capture Knowledge (curator)
+
+**Before integrating the work, distill project patterns + gotchas from this branch into the project's `knowledge/` directory.**
+
+Auto-dispatch the `curator` agent (librarian family):
+
+```
+Task(
+  subagent_type=curator,
+  description="Capture knowledge from branch <branch-name>",
+  prompt=<per-call context block below>
+)
+```
+
+Per-call block:
+
+```
+WORKING_DIRECTORY: <project root>
+TASK_DESCRIPTION: <one-paragraph summary of the branch work>
+PLAN_OR_SPEC: <path to spec/plan if any, else empty>
+BASE_SHA: $(git merge-base HEAD main)
+HEAD_SHA: $(git rev-parse HEAD)
+IMPLEMENTER_REPORT: <implementer's DONE/BLOCKED report from this branch>
+REVIEWER_REPORTS: <reviewer outputs from requesting-code-review or SDD reviews>
+EXISTING_INDEX: <contents of knowledge/INDEX.md, empty if first run>
+```
+
+**Verify all eight fields are populated** before dispatching. A missing field would cause the curator to hallucinate or return NEEDS_CONTEXT.
+
+**Handle the verdict:**
+
+- **DONE — N entries across M topic files** — pause:
+  ```
+  The curator added N entries across M topic file(s):
+  - <one-line summary per entry>
+  
+  Review `git diff knowledge/` and either commit / edit / discard
+  before proceeding to merge.
+  ```
+  Wait for the user to commit (or explicitly skip).
+
+- **NOTHING_TO_LEARN** — proceed silently to Step 3. No knowledge writes.
+
+- **NEEDS_CONTEXT — <field>** — surface the gap:
+  ```
+  Curator returned NEEDS_CONTEXT for field: <field>. Provide the missing
+  context or skip curation for this branch by responding "skip curation".
+  ```
+  Do not proceed to Step 3 until resolved (or user explicitly skips).
+
+**Anti-patterns:**
+- Do NOT dispatch the curator twice on the same SHA range. If it already ran on this branch, skip this step.
+- Do NOT proceed to merge while the curator's writes are uncommitted — the diff-review loop must close first.
+- Do NOT escalate `BLOCKED:ARCHITECTURAL` from the curator — librarians don't escalate that way. Treat as an unexpected condition and surface to user.
+
+### Step 3: Detect Environment
 
 **Determine workspace state before presenting options:**
 
@@ -51,10 +106,10 @@ This determines which menu to show and how cleanup works:
 | State | Menu | Cleanup |
 |-------|------|---------|
 | `GIT_DIR == GIT_COMMON` (normal repo) | Standard 4 options | No worktree to clean up |
-| `GIT_DIR != GIT_COMMON`, named branch | Standard 4 options | Provenance-based (see Step 6) |
+| `GIT_DIR != GIT_COMMON`, named branch | Standard 4 options | Provenance-based (see Step 7) |
 | `GIT_DIR != GIT_COMMON`, detached HEAD | Reduced 3 options (no merge) | No cleanup (externally managed) |
 
-### Step 3: Determine Base Branch
+### Step 4: Determine Base Branch
 
 ```bash
 # Try common base branches
@@ -63,7 +118,7 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 Or ask: "This branch split from main - is that correct?"
 
-### Step 4: Present Options
+### Step 5: Present Options
 
 **Normal repo and named-branch worktree — present exactly these 4 options:**
 
@@ -92,7 +147,7 @@ Which option?
 
 **Don't add explanation** - keep options concise.
 
-### Step 5: Execute Choice
+### Step 6: Execute Choice
 
 #### Option 1: Merge Locally
 
@@ -109,10 +164,10 @@ git merge <feature-branch>
 # Verify tests on merged result
 <test command>
 
-# Only after merge succeeds: cleanup worktree (Step 6), then delete branch
+# Only after merge succeeds: cleanup worktree (Step 7), then delete branch
 ```
 
-Then: Cleanup worktree (Step 6), then delete branch:
+Then: Cleanup worktree (Step 7), then delete branch:
 
 ```bash
 git branch -d <feature-branch>
@@ -163,12 +218,12 @@ MAIN_ROOT=$(git -C "$(git rev-parse --git-common-dir)/.." rev-parse --show-tople
 cd "$MAIN_ROOT"
 ```
 
-Then: Cleanup worktree (Step 6), then force-delete branch:
+Then: Cleanup worktree (Step 7), then force-delete branch:
 ```bash
 git branch -D <feature-branch>
 ```
 
-### Step 6: Cleanup Workspace
+### Step 7: Cleanup Workspace
 
 **Only runs for Options 1 and 4.** Options 2 and 3 always preserve the worktree.
 
