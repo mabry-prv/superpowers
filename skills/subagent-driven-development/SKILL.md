@@ -51,7 +51,7 @@ digraph process {
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
+        "Dispatch reviewer-spec subagent" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
         "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
@@ -70,10 +70,10 @@ digraph process {
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
+    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch reviewer-spec subagent";
+    "Dispatch reviewer-spec subagent" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes spec gaps" -> "Dispatch reviewer-spec subagent" [label="re-review"];
     "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
     "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
@@ -119,10 +119,24 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+## Per-Call Context Blocks
+
+When dispatching reviewer subagents from this skill, build the per-call context block with all fields populated and pass it as the Task `prompt` argument. Verify all fields are populated before dispatch — a missing field would cause the reviewer to hallucinate output on empty context.
+
+### reviewer-spec
+
+```
+TASK_NUMBER: <e.g. "Task 3">
+TASK_NAME: <short task name from the plan>
+TASK_REQUIREMENTS: <full text of the task as it appears in the plan>
+IMPLEMENTER_REPORT: <what the implementer claims they built>
+FILES_TO_REVIEW: <paths or git range covering this task's commits>
+```
+
 ## Prompt Templates
 
 - `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
+- Dispatch spec compliance reviewer via `Task(subagent_type=reviewer-spec, prompt=<per-call context block>)`
 - `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
 
 ## Domain-Aware Dispatch (optional)
