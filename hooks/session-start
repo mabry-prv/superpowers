@@ -22,7 +22,18 @@ escape_for_json() {
 }
 
 using_superpowers_escaped=$(escape_for_json "$using_superpowers_content")
-session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}\n</EXTREMELY_IMPORTANT>"
+
+# Knowledge INDEX injection — if <session-cwd>/knowledge/INDEX.md exists,
+# append its content (escaped) so every agent sees project-specific patterns
+# and gotchas without per-agent prompt changes.
+knowledge_index_block=""
+if [ -f "${PWD}/knowledge/INDEX.md" ]; then
+    knowledge_index_raw=$(cat "${PWD}/knowledge/INDEX.md")
+    knowledge_index_escaped=$(escape_for_json "$knowledge_index_raw")
+    knowledge_index_block="\n\n---\n\n**Project knowledge index** (from \`knowledge/INDEX.md\`):\n\n${knowledge_index_escaped}\n\n_Load full topic files with the Read tool when their one-line hook matches your task._"
+fi
+
+session_context="<EXTREMELY_IMPORTANT>\nYou have superpowers.\n\n**Below is the full content of your 'superpowers:using-superpowers' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${using_superpowers_escaped}${knowledge_index_block}\n</EXTREMELY_IMPORTANT>"
 
 # Claude Code hook output format. printf rather than heredoc to avoid the
 # bash 5.3+ heredoc hang (https://github.com/obra/superpowers/issues/571).
