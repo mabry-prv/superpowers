@@ -113,6 +113,9 @@ tests=(
     "../reviewer-code-quality/test-structure.sh"
     "../planner/test-structure.sh"
     "../architect/test-structure.sh"
+    "../curator/test-structure.sh"
+    "../lint-knowledge/test-lint.sh"
+    "../hooks/test-session-start.sh"
 )
 
 # Integration tests (slow, full execution)
