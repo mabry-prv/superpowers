@@ -51,13 +51,13 @@ Task(
 )
 ```
 
-Per-call block:
+Per-call block (the BASE_SHA resolution prefers origin/HEAD's default branch, falling back to local `main` then `master` — matching the base-branch detection in Step 4):
 
 ```
 WORKING_DIRECTORY: <project root>
 TASK_DESCRIPTION: <one-paragraph summary of the branch work>
 PLAN_OR_SPEC: <path to spec/plan if any, else empty>
-BASE_SHA: $(git merge-base HEAD main)
+BASE_SHA: $(git merge-base HEAD "$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@' || (git rev-parse --verify main >/dev/null 2>&1 && echo main) || echo master)")
 HEAD_SHA: $(git rev-parse HEAD)
 IMPLEMENTER_REPORT: <implementer's DONE/BLOCKED report from this branch>
 REVIEWER_REPORTS: <reviewer outputs from requesting-code-review or SDD reviews>
