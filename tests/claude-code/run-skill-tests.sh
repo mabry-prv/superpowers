@@ -61,6 +61,7 @@ while [[ $# -gt 0 ]]; do
             echo "  ../multi-angle-review/test-structure.sh             Lint multi-angle-review templates + SKILL.md"
             echo "  ../reviewer-spec/test-structure.sh                  Lint reviewer-spec agent + envelope"
             echo "  ../reviewer-code-quality/test-structure.sh          Lint reviewer-code-quality agent + envelope"
+            echo "  ../planner/test-structure.sh                        Lint planner agent + envelope"
             echo ""
             echo "Integration Tests (use --integration):"
             echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
@@ -109,6 +110,7 @@ tests=(
     "../multi-angle-review/test-structure.sh"
     "../reviewer-spec/test-structure.sh"
     "../reviewer-code-quality/test-structure.sh"
+    "../planner/test-structure.sh"
 )
 
 # Integration tests (slow, full execution)
