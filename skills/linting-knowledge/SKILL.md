@@ -15,17 +15,32 @@ Thin wrapper for `scripts/lint-knowledge.sh` (plugin-shipped). Runs the lint pas
 
 ### Step 1: Run the Lint Script
 
-```bash
-# Path is relative to plugin root
-SCRIPT="$(dirname "$(which claude 2>/dev/null || echo /)")/.claude/plugins/cache/superpowers-personal/superpowers/scripts/lint-knowledge.sh"
+The lint script ships with the `superpowers` plugin at `scripts/lint-knowledge.sh` (relative to the plugin root). It accepts the knowledge directory as its single argument (defaults to `./knowledge`).
 
-# Or, when running inside the plugin repo:
-bash scripts/lint-knowledge.sh
+When running inside the plugin's own repo:
+
+```bash
+bash scripts/lint-knowledge.sh        # defaults to ./knowledge
+bash scripts/lint-knowledge.sh /path/to/some/other/knowledge
 ```
 
-The script writes its report to `knowledge/_meta/lint-report.md` and exits with:
+When running inside a consuming project (the normal case): the plugin's resolved path is exposed via Claude Code's plugin mechanism. If `${CLAUDE_PLUGIN_ROOT}` is set in the agent's environment, prefer it:
+
+```bash
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/lint-knowledge.sh" ./knowledge
+```
+
+Otherwise, locate the cached plugin script with:
+
+```bash
+LINT=$(find "${HOME}/.claude/plugins/cache" -path '*superpowers*/scripts/lint-knowledge.sh' 2>/dev/null | head -1)
+bash "$LINT" ./knowledge
+```
+
+The script writes its report to `<knowledge-dir>/_meta/lint-report.md` and exits with:
 - 0 — clean (or only soft warnings)
 - 1 — errors found
+- 2 — usage error (e.g. directory not found)
 
 ### Step 2: Parse the Report
 
