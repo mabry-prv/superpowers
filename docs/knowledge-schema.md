@@ -25,6 +25,20 @@
 - Bullets under each category: `- **<slug>** — <≤120-char hook> — \`<category>/<slug>.md\``.
 - Categories seeded as `Patterns` and `Gotchas`. Curator may add new categories autonomously when substantive content doesn't fit existing ones. Lint warns on single-entry categories that linger.
 
+Example minimal INDEX:
+
+````markdown
+# Knowledge Index
+
+## Patterns
+
+- **auth** — Login + session shape + role checks — `patterns/auth.md`
+
+## Gotchas
+
+- **testing** — Flake causes, fixture ordering — `gotchas/testing.md`
+````
+
 ## Topic file (`knowledge/<category>/<slug>.md`)
 
 File-level frontmatter (single YAML block at top):
@@ -34,12 +48,14 @@ File-level frontmatter (single YAML block at top):
 | `topic` | string | yes | Slug; matches filename (without `.md`) |
 | `category` | string | yes | Matches parent directory |
 | `last-updated` | YYYY-MM-DD | yes | Date of most recent entry |
-| `last-since` | SHA (short ok) | yes | SHA of the commit that produced the most recent entry |
+| `last-since` | SHA (short ok) | yes | SHA recorded with the most recent entry's (since <SHA>) annotation — typically the branch HEAD_SHA at the time of curation |
 
 Body:
 - One `# <Topic title>` H1
 - One `## Entries` H2
 - Dated entries as `### YYYY-MM-DD — <one-line entry title> (since <SHA>)` H3, append-only
+
+Note: `last-since` (frontmatter) and `since: <SHA>` (in entry headers) refer to the same SHA at the time an entry is added. Older entries keep their original `since:` SHA; frontmatter `last-since` only tracks the most recent.
 
 ## Entry style
 
@@ -60,7 +76,7 @@ No generic advice ("use clean code", "write tests"). Every entry must be specifi
 
 ## `.knowledgeignore` (optional, repo root)
 
-Gitignore-syntax veto. Curator skips diffs in matching paths. Anything in `.gitignore` is already implicitly excluded (curator works against git diff).
+Gitignore-syntax veto. Curator skips diffs in matching paths. Anything in `.gitignore` is already implicitly excluded when the curator inspects `git diff` — untracked or git-ignored paths don't appear in the diff range.
 
 Recommended uses: secrets, generated code, vendored deps.
 
@@ -96,7 +112,7 @@ The curator agent's `## Per-Call Context` block declares:
 - `REVIEWER_REPORTS` — reviewer outputs
 - `EXISTING_INDEX` — contents of `knowledge/INDEX.md` (empty string on first run)
 
-Dispatchers MUST populate all eight before calling.
+Dispatchers MUST populate all eight fields before calling. `EXISTING_INDEX` may be the empty string when `knowledge/` does not yet exist (first run); all other fields require content.
 
 ## Curator output
 
