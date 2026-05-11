@@ -119,6 +119,42 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
+### Architectural Escalation (BLOCKED:ARCHITECTURAL)
+
+When an implementer reports BLOCKED with the literal text `BLOCKED:ARCHITECTURAL` on a line by itself, the blocker is a design question with multiple valid answers. The implementer's report includes a one-paragraph framing of the question.
+
+Handle this differently from generic BLOCKED:
+
+1. **Read the implementer's question framing.** It should be specific and scoped. If it's vague, that's a separate problem — surface to human.
+
+2. **Dispatch the architect agent** to get a recommendation:
+
+   ```
+   Task(
+     subagent_type=architect,
+     description="Architectural consultation for Task N",
+     prompt=<per-call context block below>
+   )
+   ```
+
+   Per-call block:
+
+   ```
+   QUESTION: <the implementer's question framing>
+   CODE_CONTEXT: <the relevant file contents or excerpts the implementer was working with>
+   CONSTRAINTS: <project conventions and constraints; pull from the plan and existing patterns>
+   PRIOR_ATTEMPTS: <what the implementer tried or considered>
+   DECISION_OWNER: implementer for Task N
+   ```
+
+3. **Wait for the architect's recommendation.**
+
+4. **Re-dispatch the same implementer agent** for the same task. Append the architect's full report (Options + Recommendation + Reasoning) to the original CONTEXT field, prefixed with "## Architect's Recommendation". The implementer now has a specific direction to implement.
+
+5. **Re-enter the normal flow** — implementer reports DONE, dispatch reviewer-spec, then reviewer-code-quality.
+
+If the architect returns NEEDS_CONTEXT or NEEDS_RESCOPE, treat the situation as an escalation to the human — the question wasn't answerable from what was provided, and another agent dispatch won't fix it.
+
 ## Per-Call Context Blocks
 
 When dispatching reviewer subagents from this skill, build the per-call context block with all fields populated and pass it as the Task `prompt` argument. Verify all fields are populated before dispatch — a missing field would cause the reviewer to hallucinate output on empty context.
