@@ -87,7 +87,7 @@ for t in reviewer-multitenant-isolation reviewer-migration-safety reviewer-secur
     assert_grep "$f" "### Critical" "$t has Critical tier"
     assert_grep "$f" "### Important" "$t has Important tier"
     assert_grep "$f" "### Suggestion" "$t has Suggestion tier"
-    assert_grep "$f" "## Output Format" "$t has Output Format section"
+    assert_grep "$f" "## Report Format" "$t has Report Format section"
     assert_grep "$f" "## Anti-Patterns" "$t has Anti-Patterns section"
     echo ""
 done

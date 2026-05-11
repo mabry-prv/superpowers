@@ -47,14 +47,14 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
+        "Dispatch implementer subagent" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
-        "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [shape=box];
+        "Dispatch reviewer-spec subagent" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
+        "Dispatch reviewer-code-quality subagent (SCOPE: per-task)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
@@ -65,22 +65,22 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent";
+    "Dispatch implementer subagent" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Answer questions, provide context" -> "Dispatch implementer subagent";
     "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
-    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
-    "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
+    "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch reviewer-spec subagent";
+    "Dispatch reviewer-spec subagent" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
+    "Implementer subagent fixes spec gaps" -> "Dispatch reviewer-spec subagent" [label="re-review"];
+    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch reviewer-code-quality subagent (SCOPE: per-task)" [label="yes"];
+    "Dispatch reviewer-code-quality subagent (SCOPE: per-task)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes quality issues" -> "Dispatch reviewer-code-quality subagent (SCOPE: per-task)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
+    "More tasks remain?" -> "Dispatch implementer subagent" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
@@ -119,17 +119,79 @@ Implementer subagents report one of four statuses. Handle each appropriately:
 
 **Never** ignore an escalation or force the same model to retry without changes. If the implementer said it's stuck, something needs to change.
 
-## Prompt Templates
+### Architectural Escalation (BLOCKED:ARCHITECTURAL)
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
-- `./spec-reviewer-prompt.md` - Dispatch spec compliance reviewer subagent
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+When an implementer reports BLOCKED with the literal text `BLOCKED:ARCHITECTURAL` on a line by itself, the blocker is a design question with multiple valid answers. The implementer's report includes a one-paragraph framing of the question.
+
+Handle this differently from generic BLOCKED:
+
+1. **Read the implementer's question framing.** It should be specific and scoped. If it's vague, that's a separate problem — surface to human.
+
+2. **Dispatch the architect agent** to get a recommendation:
+
+   ```
+   Task(
+     subagent_type=architect,
+     description="Architectural consultation for Task N",
+     prompt=<per-call context block below>
+   )
+   ```
+
+   Per-call block:
+
+   ```
+   QUESTION: <the implementer's question framing>
+   CODE_CONTEXT: <the relevant file contents or excerpts the implementer was working with>
+   CONSTRAINTS: <project conventions and constraints; pull from the plan and existing patterns>
+   PRIOR_ATTEMPTS: <what the implementer tried or considered>
+   DECISION_OWNER: implementer for Task N
+   ```
+
+3. **Wait for the architect's recommendation.**
+
+4. **Re-dispatch the same implementer agent** for the same task. Append the architect's full report (Options + Recommendation + Reasoning) to the original CONTEXT field, prefixed with "## Architect's Recommendation". The implementer now has a specific direction to implement.
+
+5. **Re-enter the normal flow** — implementer reports DONE, dispatch reviewer-spec, then reviewer-code-quality.
+
+6. **Loop guard.** Track that this task has already been routed through the architect once. If the re-dispatched implementer emits `BLOCKED:ARCHITECTURAL` a second time on the same task, escalate to the human — do not dispatch the architect a second time for the same task. The first recommendation didn't land; a second pass on the same question won't fix it.
+
+If the architect returns NEEDS_CONTEXT or NEEDS_RESCOPE, treat the situation as an escalation to the human — the question wasn't answerable from what was provided, and another agent dispatch won't fix it.
+
+## Per-Call Context Blocks
+
+When dispatching reviewer subagents from this skill, build the per-call context block with all fields populated and pass it as the Task `prompt` argument. Verify all fields are populated before dispatch — a missing field would cause the reviewer to hallucinate output on empty context.
+
+### reviewer-spec
+
+```
+TASK_NUMBER: <e.g. "Task 3">
+TASK_NAME: <short task name from the plan>
+TASK_REQUIREMENTS: <full text of the task as it appears in the plan>
+IMPLEMENTER_REPORT: <what the implementer claims they built>
+FILES_TO_REVIEW: <paths or git range covering this task's commits>
+```
+
+### reviewer-code-quality (per-task scope)
+
+```
+SCOPE: per-task
+DESCRIPTION: <brief summary of what the implementer built for THIS task>
+PLAN_OR_REQUIREMENTS: <plan file path + task number, or full task text>
+BASE_SHA: <commit before this task started>
+HEAD_SHA: <current commit after implementer finished>
+```
+
+## Dispatch Targets
+
+- Dispatch implementer via `Task(subagent_type=implementer-default, prompt=<per-call context block>)`. If `superpowers:dispatching-domain-agents` is active (see "Domain-Aware Dispatch" below), it picks `implementer-fastapi` / `implementer-expo` / `implementer-default` based on the task's file paths; otherwise dispatch `implementer-default` directly.
+- Dispatch spec compliance reviewer via `Task(subagent_type=reviewer-spec, prompt=<per-call context block>)`
+- Dispatch code-quality reviewer via `Task(subagent_type=reviewer-code-quality, prompt=<per-call context block with SCOPE: per-task>)`
 
 ## Domain-Aware Dispatch (optional)
 
-If the project has the framework's `apps/api/` and `apps/mobile/` layout (typically: a SaaS scaffolded by `superpowers:scaffolding-saas-project`), use `superpowers:dispatching-domain-agents` to pick a domain-specific implementer template before dispatching the Task. It routes the task to `implementer-fastapi` (for `apps/api/**` tasks), `implementer-expo` (for `apps/mobile/**` tasks), or `implementer-default` (for mixed/other paths). Domain templates encode stack-specific patterns the default prompt doesn't (async SQLAlchemy, multi-tenant session factory, expo-router, MobileMCP verification).
+If the project has the framework's `apps/api/` and `apps/mobile/` layout (typically: a SaaS scaffolded by `superpowers:scaffolding-saas-project`), use `superpowers:dispatching-domain-agents` to pick a domain-specific implementer agent before dispatching the Task. It routes the task to `implementer-fastapi` (for `apps/api/**` tasks), `implementer-expo` (for `apps/mobile/**` tasks), or `implementer-default` (for mixed/other paths). Domain agents encode stack-specific patterns the default doesn't (async SQLAlchemy, multi-tenant session factory, expo-router, MobileMCP verification).
 
-When `dispatching-domain-agents` is not active, the default `implementer-prompt.md` above is used directly.
+When `dispatching-domain-agents` is not active, dispatch `implementer-default` directly.
 
 ## Example Workflow
 

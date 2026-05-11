@@ -65,7 +65,7 @@ This codebase uses a SQLAlchemy session-factory + FastAPI middleware approach. U
 
 - Endpoint relies on a comment (`# org check happens in middleware`) without a runtime assertion to guarantee it. Comments are not enforcement.
 
-## Output Format
+## Report Format
 
 ### Critical (Must Fix)
 [Critical isolation violations]

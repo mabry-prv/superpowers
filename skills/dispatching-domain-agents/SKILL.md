@@ -81,7 +81,7 @@ digraph flow {
 
 ## Integration with subagent-driven-development
 
-This skill runs at SDD's "Dispatch implementer subagent" step. Instead of using the default `subagent-driven-development/implementer-prompt.md`, the SDD orchestrator consults this skill to pick a domain-aware agent and dispatches by `subagent_type=implementer-<name>`. After dispatch, SDD's review loop (spec compliance → code quality) proceeds unchanged.
+This skill runs at SDD's "Dispatch implementer subagent" step. Instead of dispatching the default `implementer-default` agent unconditionally, the SDD orchestrator consults this skill to pick a domain-aware agent and dispatches by `subagent_type=implementer-<name>`. After dispatch, SDD's review loop (spec compliance → code quality) proceeds unchanged.
 
 ## Routing Predicate Validation
 
@@ -102,7 +102,7 @@ Validation walked through manually during initial implementation — all rows pr
 
 ## Adding a New Agent
 
-1. Drop a new `implementer-<name>.md` under `/agents/` (at the plugin root) with the same envelope as existing implementer agents — frontmatter (`name`, `description`, `color: green`), opening role statement, `## Per-Call Context` block, the standard envelope sections (Before You Begin, Your Job, Code Organization, When You're in Over Your Head, Self-Review, Report Format), plus stack-specific guidance and anti-patterns. The `name` in the frontmatter MUST equal the filename minus `.md` — that's the `subagent_type` lookup key.
+1. Drop a new `implementer-<name>.md` under `/agents/` (at the plugin root) with the same envelope as existing implementer agents — frontmatter (`name`, `description`, `color: warm — see agents/README.md family conventions`), opening role statement, `## Per-Call Context` block, the standard envelope sections (Before You Begin, Your Job, Code Organization, When You're in Over Your Head, Self-Review, Report Format), plus stack-specific guidance and anti-patterns. The `name` in the frontmatter MUST equal the filename minus `.md` — that's the `subagent_type` lookup key.
 2. Add a row to the routing table at the appropriate priority. Choose the predicate carefully — overlap with existing predicates breaks the "first match wins" rule. The Agent column holds the bare agent name.
 3. Build a planted task fixture and validate via the existing pressure-test loop (RED with default agent + GREEN with new agent). The expected pattern is comparative: same fixture, same model, RED with default vs GREEN with the new agent — GREEN should not regress on RED's checks AND should add observable agent-specific improvements.
 4. Commit fixture and agent together.
@@ -113,7 +113,7 @@ Validation walked through manually during initial implementation — all rows pr
 - Dispatch multiple agents for one task (exactly one fires per task).
 - Use a specialized agent for a mixed-path task — fall back to default. Cross-layer awareness matters.
 - Skip the announce step — the user/orchestrator needs to know which agent was chosen.
-- Fork upstream's `subagent-driven-development/implementer-prompt.md` content into specialized agents without keeping `implementer-default` in sync. When upstream improves the prompt, propagate to default first, then re-merge into specialized variants.
+- Fork upstream's implementer prompt content into specialized agents without keeping `implementer-default` in sync. When upstream improves the prompt, propagate to `agents/implementer-default.md` first, then re-merge into specialized variants (`implementer-fastapi`, `implementer-expo`).
 - Add a new agent without a planted fixture and pressure-test — untested agents are worse than no agent (they give false confidence).
 
 ## Future Agents
