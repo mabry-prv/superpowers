@@ -42,7 +42,7 @@ assert_grep "$AGENT" '^effort: xhigh$' "frontmatter: effort=xhigh"
 # Required envelope sections
 assert_grep "$AGENT" '^## Per-Call Context' "section: Per-Call Context"
 assert_grep "$AGENT" '^## What to Check' "section: What to Check"
-assert_grep "$AGENT" '^## Output Format' "section: Output Format"
+assert_grep "$AGENT" '^## Report Format' "section: Report Format"
 assert_grep "$AGENT" '^## Anti-Patterns' "section: Anti-Patterns"
 
 # Required per-call context fields

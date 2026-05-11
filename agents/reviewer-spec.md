@@ -56,18 +56,29 @@ Read the implementation code and verify three things:
 
 **Verify by reading code, not by trusting report.**
 
+## Severity Rules
+
+This reviewer uses task-shaped categories rather than Critical / Important / Suggestion (sanctioned by `agents/README.md` §"System prompt envelope"):
+
+- **Missing** — required pieces of the spec that the implementer skipped or didn't deliver
+- **Extra** — features built that the spec did not request
+- **Misunderstood** — required pieces implemented in a way that doesn't satisfy the requirement
+
+Every finding needs a `file:line` reference and a one-sentence explanation. Be specific — vagueness lets bugs through.
+
 ## Report Format
+
+List each finding under the appropriate category:
+
+- **Missing:** [requirement, with `file:line` showing where it should have been]
+- **Extra:** [unrequested feature, with `file:line` showing what to remove]
+- **Misunderstood:** [requirement, with explanation of the mismatch]
 
 End with exactly one of:
 
-**✅ Spec compliant** (after code inspection — every requirement met, nothing extra)
+**Verdict: APPROVED** (after code inspection — every requirement met, nothing extra)
 
-**❌ Issues found:**
-- Missing: [requirement, with `file:line` showing where it should have been]
-- Extra: [unrequested feature, with `file:line` showing what to remove]
-- Misunderstood: [requirement, with explanation of the mismatch]
-
-For each issue, give a `file:line` reference and a one-sentence explanation. Be specific — vagueness lets bugs through.
+**Verdict: BLOCKED — N finding(s)** (N = total across Missing / Extra / Misunderstood)
 
 ## Anti-Patterns — What NOT to Do
 
@@ -82,3 +93,25 @@ For each issue, give a `file:line` reference and a one-sentence explanation. Be 
 - Approve based on the implementer's claims alone
 - Skip a requirement check because "the implementer probably did it"
 - Be vague — every issue needs a `file:line`
+
+## Example Output
+
+```
+Reviewed all 3 files in FILES_TO_REVIEW against TASK_REQUIREMENTS for Task 5 ("Add archive endpoint").
+
+Missing: none
+Extra: none
+Misunderstood: none
+
+**Verdict: APPROVED**
+```
+
+```
+Reviewed all 4 files in FILES_TO_REVIEW against TASK_REQUIREMENTS for Task 5 ("Add archive endpoint").
+
+- **Missing:** PATCH /notes/{id}/archive endpoint declared in spec is not present — `apps/api/app/routers/notes.py:42` only handles GET and POST.
+- **Extra:** soft-delete column `deleted_at` added to the `Note` model — `apps/api/app/models/note.py:14` — spec only asked for an `archived_at` field.
+- **Misunderstood:** spec asks the archive endpoint to return the archived row, but `apps/api/app/routers/notes.py:67` returns `{"ok": true}` with no payload — mobile client cannot refresh UI without the row.
+
+**Verdict: BLOCKED — 3 finding(s)**
+```

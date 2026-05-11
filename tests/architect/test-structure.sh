@@ -65,6 +65,19 @@ assert_grep "$AGENT" '[Dd]o NOT modify code|don.t modify code|does NOT modify co
 # Fixture presence
 assert_file "$FIX/pure-design-q.md" "fixture: pure-design-q.md"
 
+# Cross-file: each implementer carries the literal escalation token
+for impl in implementer-default implementer-fastapi implementer-expo; do
+    assert_grep "$REPO_ROOT/agents/${impl}.md" 'BLOCKED:ARCHITECTURAL' \
+        "${impl}: BLOCKED:ARCHITECTURAL paragraph present"
+done
+
+# Cross-file: SDD references architect by subagent_type and uses architect's per-call fields
+SDD="$REPO_ROOT/skills/subagent-driven-development/SKILL.md"
+assert_grep "$SDD" 'subagent_type=architect' "SDD: dispatches architect by subagent_type"
+for field in QUESTION CODE_CONTEXT CONSTRAINTS PRIOR_ATTEMPTS DECISION_OWNER; do
+    assert_grep "$SDD" "${field}:" "SDD: per-call field ${field} present"
+done
+
 echo ""
 echo "Results: $passed passed, $failed failed"
 [ "$failed" -eq 0 ] || exit 1

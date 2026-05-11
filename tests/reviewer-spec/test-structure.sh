@@ -44,6 +44,7 @@ assert_grep "$AGENT" '^effort: xhigh$' "frontmatter: effort=xhigh"
 # Required envelope sections
 assert_grep "$AGENT" '^## Per-Call Context' "section: Per-Call Context"
 assert_grep "$AGENT" '^## Your Job' "section: Your Job"
+assert_grep "$AGENT" '^## Severity Rules' "section: Severity Rules"
 assert_grep "$AGENT" '^## Report Format' "section: Report Format"
 assert_grep "$AGENT" '^## Anti-Patterns' "section: Anti-Patterns"
 
@@ -54,9 +55,9 @@ assert_grep "$AGENT" 'TASK_REQUIREMENTS' "context field: TASK_REQUIREMENTS"
 assert_grep "$AGENT" 'IMPLEMENTER_REPORT' "context field: IMPLEMENTER_REPORT"
 assert_grep "$AGENT" 'FILES_TO_REVIEW' "context field: FILES_TO_REVIEW"
 
-# Required verdict strings
-assert_grep "$AGENT" 'Spec compliant' "verdict: Spec compliant"
-assert_grep "$AGENT" 'Issues found' "verdict: Issues found"
+# Required verdict strings (plain-text, no emoji glyphs)
+assert_grep "$AGENT" 'Verdict: APPROVED' "verdict: APPROVED"
+assert_grep "$AGENT" 'Verdict: BLOCKED' "verdict: BLOCKED"
 
 # Fixture presence
 assert_file "$FIX/compliant.md" "fixture: compliant.md"

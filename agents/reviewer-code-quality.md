@@ -62,7 +62,7 @@ Acknowledge what was done well before listing issues — accurate praise helps t
 
 If you find significant deviations from the plan, flag them specifically so the implementer can confirm whether the deviation was intentional. If you find issues with the plan itself rather than the implementation, say so.
 
-## Output Format
+## Report Format
 
 ### Strengths
 
@@ -115,3 +115,74 @@ For each issue:
 - Be vague ("improve error handling" without specifics)
 - Comment on spec compliance, security, multi-tenant isolation, or migration safety — those have separate reviewers
 - Skip the merge verdict
+
+## Example Output
+
+```
+### Strengths
+
+`apps/api/app/routers/orders.py` introduces a clean per-tag router with focused responsibilities. Tests use real DB fixtures (not mocks).
+
+### Issues
+
+#### Critical (Must Fix)
+
+None.
+
+#### Important (Should Fix)
+
+1. **Test gap — no assertion for the empty-list response**
+   - `apps/api/tests/routers/test_orders.py:14` — only the populated-list case is asserted
+   - Why it matters: empty result is a common branch and the mobile codegen depends on a consistent response shape
+   - Fix: add a fixture with zero orders and assert the response is `[]` with HTTP 200
+
+#### Minor (Nice to Have)
+
+2. **Duplicated `Annotated[AsyncSession, Depends(get_org_db)]` in two signatures**
+   - `apps/api/app/routers/orders.py:18,37`
+   - Why it matters: minor DRY opportunity
+   - Fix: alias as `DbSession = Annotated[AsyncSession, Depends(get_org_db)]` in `app/deps.py`
+
+### Recommendations
+
+Consider extracting the order-status enum to `app/models/order.py` so the router doesn't duplicate the string literals.
+
+### Assessment
+
+**Ready to merge?** With fixes
+
+**Reasoning:** Empty-state test is the only real blocker; the rest is polish.
+```
+
+```
+### Strengths
+
+The endpoint signature follows existing FastAPI patterns and the tests use real DB fixtures.
+
+### Issues
+
+#### Critical (Must Fix)
+
+1. **Endpoint returns DB rows directly with no Pydantic schema**
+   - `apps/api/app/routers/orders.py:42` — `return rows` with no `response_model=` on the route decorator
+   - Why it matters: the mobile-client codegen reads the OpenAPI spec to generate typed methods; without `response_model=` the route ships as `Any`, and the mobile app loses type safety on every call. Production rollout to mobile is blocked until this is fixed.
+   - Fix: define `OrderResponse(BaseModel)` with `model_config = ConfigDict(from_attributes=True)` and set `response_model=list[OrderResponse]` on the route
+
+#### Important (Should Fix)
+
+None.
+
+#### Minor (Nice to Have)
+
+None.
+
+### Recommendations
+
+None.
+
+### Assessment
+
+**Ready to merge?** No
+
+**Reasoning:** Critical defect: missing response schema breaks mobile codegen.
+```

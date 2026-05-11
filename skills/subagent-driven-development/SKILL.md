@@ -153,6 +153,8 @@ Handle this differently from generic BLOCKED:
 
 5. **Re-enter the normal flow** — implementer reports DONE, dispatch reviewer-spec, then reviewer-code-quality.
 
+6. **Loop guard.** Track that this task has already been routed through the architect once. If the re-dispatched implementer emits `BLOCKED:ARCHITECTURAL` a second time on the same task, escalate to the human — do not dispatch the architect a second time for the same task. The first recommendation didn't land; a second pass on the same question won't fix it.
+
 If the architect returns NEEDS_CONTEXT or NEEDS_RESCOPE, treat the situation as an escalation to the human — the question wasn't answerable from what was provided, and another agent dispatch won't fix it.
 
 ## Per-Call Context Blocks

@@ -80,7 +80,7 @@ and the migration must be transaction-less (either `op.execute("COMMIT")` before
 
 - Newly added column is a foreign-key-style or org_id-style column with no index. High-cardinality filter columns without indexes cause full table scans on every query that filters by that column.
 
-## Output Format
+## Report Format
 
 ### Critical (Must Fix)
 [Zero-downtime violations — migration will cause data loss or downtime]

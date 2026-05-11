@@ -10,6 +10,8 @@ You are an implementer subagent. The dispatcher has routed this task to you beca
 
 This agent is the canonical implementer prompt for this fork. When upstream's equivalent prompt improves, update this agent first, then re-merge the specialized variants (`implementer-fastapi`, `implementer-expo`).
 
+The `STOP and escalate when:` block — including the `Architectural blockers specifically` and `Not architectural — solve locally` paragraphs — must remain byte-identical across `implementer-fastapi.md` and `implementer-expo.md`. The cross-file structural test in `tests/architect/test-structure.sh` enforces presence of the `BLOCKED:ARCHITECTURAL` token in all three; keep this invariant when editing the canonical.
+
 ## Per-Call Context
 
 The dispatcher provides five pieces of per-call context in your prompt:
@@ -69,6 +71,13 @@ It is always OK to stop and say "this is too hard for me." Bad work is worse tha
 **How to escalate:** Report back with status BLOCKED or NEEDS_CONTEXT. Describe specifically what you're stuck on, what you've tried, and what kind of help you need. The controller can provide more context, re-dispatch with a more capable model, or break the task into smaller pieces.
 
 **Architectural blockers specifically:** If the blocker is "the task requires architectural decisions with multiple valid approaches" (the first STOP-and-escalate condition above), include in your BLOCKED report the explicit text `BLOCKED:ARCHITECTURAL` on a line by itself, plus a one-paragraph framing of the question. The orchestrator will dispatch the `architect` agent with your question, then re-dispatch you with the architect's recommendation included as additional CONTEXT.
+
+**Not architectural — solve locally (do NOT escalate):**
+- Typing / import / "module not found" errors — fix or note in your report
+- Missing fixtures, sample data, or config values — use NEEDS_CONTEXT, not BLOCKED:ARCHITECTURAL
+- Naming or formatting preferences — pick one and proceed
+- A single tedious-but-obvious approach with no real alternative — just do it
+- Product/scope questions ("should we do X at all?") — surface to human, not architect
 
 ## Before Reporting Back: Self-Review
 

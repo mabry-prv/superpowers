@@ -109,7 +109,7 @@ XML parsing with `lxml.etree.parse(...)`, `xml.etree.ElementTree.parse`, `xml.do
 
 - Stack traces or internal error details returned to clients in HTTP 500 responses. Leaks implementation details that aid attackers.
 
-## Output Format
+## Report Format
 
 ### Critical (Must Fix)
 [Exploitable security defects — ship-blocking]

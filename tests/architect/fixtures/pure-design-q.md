@@ -30,7 +30,3 @@ None — this is greenfield.
 ## DECISION_OWNER
 
 implementer for Task 3
-
-## EXPECTED RESPONSE SHAPE
-
-Two clearly-distinct options (Option A: JSONB column, Option B: separate table — possibly Option C: hstore or a typed sub-table for special fields). Each with Buys/Costs/Right-when. A recommendation that picks one specifically based on the constraints (read-mostly, no aggregation → Option A is the obvious fit). Reasoning tied to those constraints.
