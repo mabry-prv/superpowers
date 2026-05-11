@@ -54,7 +54,7 @@ digraph process {
         "Dispatch reviewer-spec subagent" [shape=box];
         "Spec reviewer subagent confirms code matches spec?" [shape=diamond];
         "Implementer subagent fixes spec gaps" [shape=box];
-        "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [shape=box];
+        "Dispatch reviewer-code-quality subagent (SCOPE: per-task)" [shape=box];
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
         "Mark task complete in TodoWrite" [shape=box];
@@ -74,10 +74,10 @@ digraph process {
     "Dispatch reviewer-spec subagent" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
     "Implementer subagent fixes spec gaps" -> "Dispatch reviewer-spec subagent" [label="re-review"];
-    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="yes"];
-    "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
+    "Spec reviewer subagent confirms code matches spec?" -> "Dispatch reviewer-code-quality subagent (SCOPE: per-task)" [label="yes"];
+    "Dispatch reviewer-code-quality subagent (SCOPE: per-task)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./code-quality-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes quality issues" -> "Dispatch reviewer-code-quality subagent (SCOPE: per-task)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
@@ -133,11 +133,21 @@ IMPLEMENTER_REPORT: <what the implementer claims they built>
 FILES_TO_REVIEW: <paths or git range covering this task's commits>
 ```
 
+### reviewer-code-quality (per-task scope)
+
+```
+SCOPE: per-task
+DESCRIPTION: <brief summary of what the implementer built for THIS task>
+PLAN_OR_REQUIREMENTS: <plan file path + task number, or full task text>
+BASE_SHA: <commit before this task started>
+HEAD_SHA: <current commit after implementer finished>
+```
+
 ## Prompt Templates
 
 - `./implementer-prompt.md` - Dispatch implementer subagent
 - Dispatch spec compliance reviewer via `Task(subagent_type=reviewer-spec, prompt=<per-call context block>)`
-- `./code-quality-reviewer-prompt.md` - Dispatch code quality reviewer subagent
+- Dispatch code-quality reviewer via `Task(subagent_type=reviewer-code-quality, prompt=<per-call context block with SCOPE: per-task>)`
 
 ## Domain-Aware Dispatch (optional)
 

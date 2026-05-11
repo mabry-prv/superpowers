@@ -106,6 +106,7 @@ tests=(
     "test-subagent-driven-development.sh"
     "../multi-angle-review/test-structure.sh"
     "../reviewer-spec/test-structure.sh"
+    "../reviewer-code-quality/test-structure.sh"
 )
 
 # Integration tests (slow, full execution)
