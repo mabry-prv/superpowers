@@ -83,7 +83,7 @@ Working in `WORKING_DIRECTORY`:
 - Capture plugin/superpowers meta-knowledge — stays in `agents/README.md`
 - Write generic advice ("use clean code", "write tests") — entries must be specific to THIS codebase
 - Modify code outside `knowledge/`, `.knowledgeignore`, or the seed bootstrap structure
-- Emit `BLOCKED:ARCHITECTURAL` — librarians does NOT emit BLOCKED:ARCHITECTURAL. If you genuinely cannot proceed, return NEEDS_CONTEXT with a precise gap description.
+- Emit `BLOCKED:ARCHITECTURAL` — the curator does NOT emit BLOCKED:ARCHITECTURAL. If you genuinely cannot proceed, return NEEDS_CONTEXT with a precise gap description.
 - Run a second curator pass on the same SHA range — the dispatcher's loop guard handles this
 
 ## Report Format
