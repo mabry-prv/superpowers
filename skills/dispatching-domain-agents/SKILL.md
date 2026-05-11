@@ -81,7 +81,7 @@ digraph flow {
 
 ## Integration with subagent-driven-development
 
-This skill runs at SDD's "Dispatch implementer subagent" step. Instead of using the default `subagent-driven-development/implementer-prompt.md`, the SDD orchestrator consults this skill to pick a domain-aware agent and dispatches by `subagent_type=implementer-<name>`. After dispatch, SDD's review loop (spec compliance → code quality) proceeds unchanged.
+This skill runs at SDD's "Dispatch implementer subagent" step. Instead of dispatching the default `implementer-default` agent unconditionally, the SDD orchestrator consults this skill to pick a domain-aware agent and dispatches by `subagent_type=implementer-<name>`. After dispatch, SDD's review loop (spec compliance → code quality) proceeds unchanged.
 
 ## Routing Predicate Validation
 
@@ -113,7 +113,7 @@ Validation walked through manually during initial implementation — all rows pr
 - Dispatch multiple agents for one task (exactly one fires per task).
 - Use a specialized agent for a mixed-path task — fall back to default. Cross-layer awareness matters.
 - Skip the announce step — the user/orchestrator needs to know which agent was chosen.
-- Fork upstream's `subagent-driven-development/implementer-prompt.md` content into specialized agents without keeping `implementer-default` in sync. When upstream improves the prompt, propagate to default first, then re-merge into specialized variants.
+- Fork upstream's implementer prompt content into specialized agents without keeping `implementer-default` in sync. When upstream improves the prompt, propagate to `agents/implementer-default.md` first, then re-merge into specialized variants (`implementer-fastapi`, `implementer-expo`).
 - Add a new agent without a planted fixture and pressure-test — untested agents are worse than no agent (they give false confidence).
 
 ## Future Agents

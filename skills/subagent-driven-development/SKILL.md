@@ -47,7 +47,7 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
+        "Dispatch implementer subagent" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
         "Implementer subagent implements, tests, commits, self-reviews" [shape=box];
@@ -65,10 +65,10 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpowers:finishing-a-development-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent (./implementer-prompt.md)";
-    "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
+    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Dispatch implementer subagent";
+    "Dispatch implementer subagent" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
-    "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Answer questions, provide context" -> "Dispatch implementer subagent";
     "Implementer subagent asks questions?" -> "Implementer subagent implements, tests, commits, self-reviews" [label="no"];
     "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch reviewer-spec subagent";
     "Dispatch reviewer-spec subagent" -> "Spec reviewer subagent confirms code matches spec?";
@@ -80,7 +80,7 @@ digraph process {
     "Implementer subagent fixes quality issues" -> "Dispatch reviewer-code-quality subagent (SCOPE: per-task)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Mark task complete in TodoWrite" [label="yes"];
     "Mark task complete in TodoWrite" -> "More tasks remain?";
-    "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
+    "More tasks remain?" -> "Dispatch implementer subagent" [label="yes"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpowers:finishing-a-development-branch";
 }
@@ -179,17 +179,17 @@ BASE_SHA: <commit before this task started>
 HEAD_SHA: <current commit after implementer finished>
 ```
 
-## Prompt Templates
+## Dispatch Targets
 
-- `./implementer-prompt.md` - Dispatch implementer subagent
+- Dispatch implementer via `Task(subagent_type=implementer-default, prompt=<per-call context block>)`. If `superpowers:dispatching-domain-agents` is active (see "Domain-Aware Dispatch" below), it picks `implementer-fastapi` / `implementer-expo` / `implementer-default` based on the task's file paths; otherwise dispatch `implementer-default` directly.
 - Dispatch spec compliance reviewer via `Task(subagent_type=reviewer-spec, prompt=<per-call context block>)`
 - Dispatch code-quality reviewer via `Task(subagent_type=reviewer-code-quality, prompt=<per-call context block with SCOPE: per-task>)`
 
 ## Domain-Aware Dispatch (optional)
 
-If the project has the framework's `apps/api/` and `apps/mobile/` layout (typically: a SaaS scaffolded by `superpowers:scaffolding-saas-project`), use `superpowers:dispatching-domain-agents` to pick a domain-specific implementer template before dispatching the Task. It routes the task to `implementer-fastapi` (for `apps/api/**` tasks), `implementer-expo` (for `apps/mobile/**` tasks), or `implementer-default` (for mixed/other paths). Domain templates encode stack-specific patterns the default prompt doesn't (async SQLAlchemy, multi-tenant session factory, expo-router, MobileMCP verification).
+If the project has the framework's `apps/api/` and `apps/mobile/` layout (typically: a SaaS scaffolded by `superpowers:scaffolding-saas-project`), use `superpowers:dispatching-domain-agents` to pick a domain-specific implementer agent before dispatching the Task. It routes the task to `implementer-fastapi` (for `apps/api/**` tasks), `implementer-expo` (for `apps/mobile/**` tasks), or `implementer-default` (for mixed/other paths). Domain agents encode stack-specific patterns the default doesn't (async SQLAlchemy, multi-tenant session factory, expo-router, MobileMCP verification).
 
-When `dispatching-domain-agents` is not active, the default `implementer-prompt.md` above is used directly.
+When `dispatching-domain-agents` is not active, dispatch `implementer-default` directly.
 
 ## Example Workflow
 
