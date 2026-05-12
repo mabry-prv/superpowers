@@ -25,7 +25,7 @@ cp -R "$FIX" "$WORK/knowledge"
 
 # Invoke the vetting-knowledge skill via claude
 # (Use a non-interactive prompt that runs the skill and returns control.)
-output=$(cd "$WORK" && echo "Use superpowers:vetting-knowledge to audit ./knowledge. Answer 'n' if asked about the fix loop." | claude 2>&1 || true)
+output=$(cd "$WORK" && echo "Use superpowers:vetting-knowledge to audit ./knowledge." | claude 2>&1 || true)
 
 # Assertion 1: report file written with ISO-sortable timestamp filename
 report=$(find "$WORK/knowledge/_meta/vetting-reports" -type f -name '*.md' 2>/dev/null | head -1)
@@ -57,6 +57,13 @@ if [ -n "$report" ]; then
         pass "degraded mode: at least one entry bucketed as unvetted"
     else
         fail "degraded mode: no unvetted entries"
+    fi
+
+    # Degraded mode: zero contradicted entries (no search → no contradictions possible)
+    if grep -q '^  contradicted: 0$' "$report"; then
+        pass "degraded mode: zero contradicted entries"
+    else
+        fail "degraded mode: expected zero contradicted entries"
     fi
 fi
 

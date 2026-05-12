@@ -58,7 +58,7 @@ For each enumerated entry:
 
 For each entry, grep the project tree (excluding `knowledge/`, `docs/`, `tests/`) for identifiers in the entry body. Surface the file count + paths in the report under `files_referencing`. For contradicted entries this is the "may need code review" flag.
 
-Best-effort: skip silently if too slow (no user prompt). False positives and false negatives are both acceptable — the precision contract is loose.
+Bound: 10-second wall-clock per entry. On timeout, record `files_referencing: skipped (timeout)` in the report's contradicted/unvetted/confirmed entry rather than an empty list — preserves the signal that the grep was attempted but couldn't complete. False positives and false negatives are both acceptable — the precision contract is loose.
 
 ### Step 5: Write the report
 
@@ -178,7 +178,7 @@ For each entry in the report's `contradicted[]` list:
    Reviser proposed this rewrite. Options:
      (a) commit as-is
      (b) leave the change unstaged so you can edit further
-     (c) discard (git checkout <entry-path>)
+     (c) discard this entry's changes only (git checkout -- <entry-path>); prior commits in this loop are not affected
    ```
 
    Execute the user's choice. Move to next contradicted entry.
