@@ -66,11 +66,18 @@ while [[ $# -gt 0 ]]; do
             echo "  ../curator/test-structure.sh                        Lint curator agent + envelope + cross-file wiring"
             echo "  ../lint-knowledge/test-lint.sh                      Test scripts/lint-knowledge.sh against bad + clean fixtures"
             echo "  ../hooks/test-session-start.sh                      Test session-start INDEX injection"
+            echo "  ../using-project-knowledge/test-structure.sh      Lint using-project-knowledge skill structure"
+            echo "  ../reviser/test-structure.sh                      Lint reviser agent + cross-file README wiring"
+            echo "  ../vetting-knowledge/test-structure.sh            Lint vetting-knowledge skill structure"
+            echo "  ../backfill-knowledge-sources/test.sh             Test backfill script: backfills missing + idempotent"
             echo ""
             echo "Integration Tests (use --integration):"
             echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
             echo "  test-requesting-code-review.sh                   Code-review subagent dispatch"
             echo "  ../multi-angle-review/test-integration.sh        Reviewer dispatch on composite-bug + composite-clean fixtures"
+            echo "  ../using-project-knowledge/test-integration.sh    Skill loads INDEX into agent context"
+            echo "  ../reviser/test-integration.sh                    Reviser preserves H3 + updates Source"
+            echo "  ../vetting-knowledge/test-integration.sh          Vetting in degraded mode produces report"
             exit 0
             ;;
         *)
@@ -119,6 +126,10 @@ tests=(
     "../curator/test-structure.sh"
     "../lint-knowledge/test-lint.sh"
     "../hooks/test-session-start.sh"
+    "../using-project-knowledge/test-structure.sh"
+    "../reviser/test-structure.sh"
+    "../vetting-knowledge/test-structure.sh"
+    "../backfill-knowledge-sources/test.sh"
 )
 
 # Integration tests (slow, full execution)
@@ -126,6 +137,9 @@ integration_tests=(
     "test-subagent-driven-development-integration.sh"
     "test-requesting-code-review.sh"
     "../multi-angle-review/test-integration.sh"
+    "../using-project-knowledge/test-integration.sh"
+    "../reviser/test-integration.sh"
+    "../vetting-knowledge/test-integration.sh"
 )
 
 # Add integration tests if requested
