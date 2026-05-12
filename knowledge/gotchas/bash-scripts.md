@@ -33,6 +33,8 @@ Any time a lint/check accumulates into an array inside a `while`, the
 producer must be a `< <(…)` redirection, not a `producer | while`.
 See `scripts/lint-knowledge.sh:69` for the working pattern.
 
+**Source:** https://mywiki.wooledge.org/BashFAQ/024
+
 ### 2026-05-11 — `hooks/session-start` resolves `knowledge/INDEX.md` via `${PWD}` (since d77e453)
 
 The session-start hook injects `knowledge/INDEX.md` only when
@@ -47,3 +49,5 @@ it works in non-git project roots and stays cheap. See
 user starts a session from a subdirectory, the INDEX won't be injected.
 Document this in onboarding rather than "fixing" the hook to walk up —
 the cwd contract is intentional.
+
+**Source:** observed_locally_unvetted

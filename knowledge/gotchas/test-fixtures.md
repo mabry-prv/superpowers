@@ -27,6 +27,8 @@ that the fixture's measured value is on the wrong side of the threshold
 before committing — or stamp the threshold + actual count in a comment
 at the top of the fixture so drift is obvious.
 
+**Source:** observed_locally_unvetted
+
 ### 2026-05-11 — Curator test regex is literal-phrase-sensitive (since aae076d)
 
 `tests/curator/test-structure.sh:60` matches one of three literal
@@ -49,3 +51,5 @@ Any future librarian-family agent that uses different phrasing
 **Avoid:** when editing `agents/*.md` anti-pattern bullets, grep the
 matching `tests/*/test-structure.sh` for literal-string assertions and
 either keep the phrasing or update both files together.
+
+**Source:** observed_locally_unvetted

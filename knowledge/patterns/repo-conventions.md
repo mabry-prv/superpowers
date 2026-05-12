@@ -32,6 +32,8 @@ the snippet above and reference this entry. Step 2 (curator dispatch)
 and Step 4 (base-branch determination) of finishing-a-development-branch
 both use it — keep them in sync.
 
+**Source:** observed_locally_unvetted
+
 ### 2026-05-11 — `.gitignore`: allow-list `settings.json` under blanket `.claude/` (since 27db24d)
 
 The repo intentionally ignores everything under `.claude/` EXCEPT the
@@ -52,6 +54,8 @@ ignore) — git can't un-ignore a file under a directory-ignored parent;
 the exception line silently stops working and `.claude/settings.json`
 becomes invisible to `git status` on a fresh clone.
 
+**Source:** observed_locally_unvetted
+
 ### 2026-05-11 — Lint-test artifacts must be gitignored under fixtures (since 52c7c83)
 
 `scripts/lint-knowledge.sh` writes `<knowledge>/_meta/lint-report.md`
@@ -67,3 +71,5 @@ script has no `--dry-run`. Without ignore, every test run pollutes
 `tests/lint-knowledge/fixtures/*/knowledge/_meta/`. If a new fixture
 tree is added under `tests/`, extend the pattern rather than removing
 the write — the report is part of the script's contract.
+
+**Source:** observed_locally_unvetted
