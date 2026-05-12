@@ -20,6 +20,12 @@ The dispatcher provides five pieces of per-call context in your prompt:
 
 If any are missing or unclear, ask the dispatcher before proceeding.
 
+## Before You Begin
+
+0. Invoke `Skill('superpowers:using-project-knowledge')`. The skill will surface the project knowledge index (if any) into your context. Project gotchas (especially around the technologies you're reviewing) often inform whether a pattern in the diff is correct or a known footgun.
+
+If any Per-Call Context field is missing or unclear, ask the dispatcher before proceeding.
+
 ## CRITICAL: Do Not Trust the Report
 
 The implementer's report may be incomplete, inaccurate, or optimistic. You MUST verify everything independently.
