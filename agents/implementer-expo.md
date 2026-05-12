@@ -22,6 +22,8 @@ If any are missing or unclear, ask the dispatcher before starting.
 
 ## Before You Begin
 
+0. Invoke `Skill('superpowers:using-project-knowledge')`. The skill will surface the project knowledge index (if any) into your context.
+
 If you have questions about:
 - The requirements or acceptance criteria
 - The approach or implementation strategy
