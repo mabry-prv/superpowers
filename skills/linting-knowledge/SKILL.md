@@ -52,8 +52,8 @@ Read `knowledge/_meta/lint-report.md`. Three sections of interest:
 
 ### Step 3: Surface Findings
 
-- For missing-Source errors: print the entry's topic-path and title; suggest either (a) re-running curator with vetting (to attempt URL discovery), (b) appending `**Source:** observed_locally_unvetted`, or (c) running `scripts/backfill-knowledge-sources.sh` for bulk backfill.
-- For malformed-Source errors: print the topic-path, title, and the offending value; show the three valid forms (URL / `observed_locally_unvetted` / `observed_locally_unvetted (hint)`).
+- For missing-Source errors (lint report line begins with `missing **Source:** line`): print the entry's topic-path and title; suggest either (a) re-running curator with vetting (to attempt URL discovery), (b) appending `**Source:** observed_locally_unvetted`, or (c) running `scripts/backfill-knowledge-sources.sh` for bulk backfill.
+- For malformed-Source errors (lint report line begins with `malformed **Source:** value`): print the topic-path, title, and the offending value; show the three valid forms (URL / `observed_locally_unvetted` / `observed_locally_unvetted (hint)`).
 
 For each error: print `file:line` (or topic name), what's wrong, how to fix.
 For warnings + suggestions: print summary; offer to walk through.
