@@ -9,7 +9,7 @@ Plugin-shipped agents dispatched via `Task(subagent_type=<agent-name>, prompt=<p
 | Implementer | `implementer-<stack>` | warm (pink, orange, yellow) | Writes code + tests for one task |
 | Reviewer | `reviewer-<concern>` | red | Reads code, returns verdict + findings |
 | Designer | `planner` / `architect` | cool (green, blue) | Produces plans or design recommendations |
-| Librarian | `curator` (others future) | teal / cyan | Distills project patterns + gotchas into `knowledge/` from completed branches |
+| Librarian | `curator`, `reviser` | teal / cyan | Distills project patterns + gotchas into `knowledge/` (curator) and rewrites contradicted entries against canonical sources (reviser) |
 
 ## Frontmatter contract
 
@@ -50,6 +50,7 @@ Every dispatcher MUST populate every field in the agent's per-call context block
 | `planner` | SPEC_PATH, WORKING_DIRECTORY, PROJECT_CONTEXT, CONSTRAINTS |
 | `architect` | QUESTION, CODE_CONTEXT, CONSTRAINTS, PRIOR_ATTEMPTS, DECISION_OWNER |
 | `curator` | WORKING_DIRECTORY, TASK_DESCRIPTION, PLAN_OR_SPEC, BASE_SHA, HEAD_SHA, IMPLEMENTER_REPORT, REVIEWER_REPORTS, EXISTING_INDEX |
+| `reviser` | ENTRY_PATH, ENTRY_TITLE, CURRENT_ENTRY_TEXT, CANONICAL_URL, CANONICAL_SUMMARY |
 
 ## Adding a new agent
 
@@ -89,3 +90,4 @@ Task(
 | `planner.md` | Spec → plan |
 | `architect.md` | Design consultation |
 | `curator.md` | Distills patterns + gotchas from completed branches into `knowledge/` |
+| `reviser.md` | Rewrites a single contradicted knowledge entry against a canonical source (preserves H3 + since-SHA) |
