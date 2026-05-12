@@ -56,6 +56,17 @@ EXISTING_INDEX: <verbatim contents>
 - **DONE — N entries across M topic files** — pause; prompt user to review `git diff knowledge/` and commit/edit/discard
 - **NOTHING_TO_LEARN** — done; no writes
 - **NEEDS_CONTEXT — <field>** — surface the gap; do not proceed until resolved
+- **Flagged for review** (when the curator's report includes a "Flagged for review" block from contradicted candidates) — interactive resolution per flagged entry:
+
+  ```
+  The curator wrote N entries and flagged M candidates because canonical
+  guidance contradicts them. For each one:
+    (a) accept canonical, skip the entry
+    (b) write as observed_locally_unvetted (user override)
+    (c) edit to align with canonical (dispatch the reviser)
+  ```
+
+  Same execution semantics as `finishing-a-development-branch` Step 2 (see that skill for the full per-option behavior).
 
 ## Anti-Patterns — What NOT to Do
 
