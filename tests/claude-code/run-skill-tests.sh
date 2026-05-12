@@ -63,6 +63,9 @@ while [[ $# -gt 0 ]]; do
             echo "  ../reviewer-code-quality/test-structure.sh          Lint reviewer-code-quality agent + envelope"
             echo "  ../planner/test-structure.sh                        Lint planner agent + envelope"
             echo "  ../architect/test-structure.sh                      Lint architect agent + envelope"
+            echo "  ../curator/test-structure.sh                        Lint curator agent + envelope + cross-file wiring"
+            echo "  ../lint-knowledge/test-lint.sh                      Test scripts/lint-knowledge.sh against bad + clean fixtures"
+            echo "  ../hooks/test-session-start.sh                      Test session-start INDEX injection"
             echo ""
             echo "Integration Tests (use --integration):"
             echo "  test-subagent-driven-development-integration.sh  Full workflow execution"
@@ -113,6 +116,9 @@ tests=(
     "../reviewer-code-quality/test-structure.sh"
     "../planner/test-structure.sh"
     "../architect/test-structure.sh"
+    "../curator/test-structure.sh"
+    "../lint-knowledge/test-lint.sh"
+    "../hooks/test-session-start.sh"
 )
 
 # Integration tests (slow, full execution)

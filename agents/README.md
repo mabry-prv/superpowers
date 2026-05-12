@@ -9,6 +9,7 @@ Plugin-shipped agents dispatched via `Task(subagent_type=<agent-name>, prompt=<p
 | Implementer | `implementer-<stack>` | warm (pink, orange, yellow) | Writes code + tests for one task |
 | Reviewer | `reviewer-<concern>` | red | Reads code, returns verdict + findings |
 | Designer | `planner` / `architect` | cool (green, blue) | Produces plans or design recommendations |
+| Librarian | `curator` (others future) | teal / cyan | Distills project patterns + gotchas into `knowledge/` from completed branches |
 
 ## Frontmatter contract
 
@@ -48,6 +49,7 @@ Every dispatcher MUST populate every field in the agent's per-call context block
 | `reviewer-security` / `reviewer-multitenant-isolation` / `reviewer-migration-safety` | DESCRIPTION, PLAN_OR_REQUIREMENTS, FILES_TO_REVIEW |
 | `planner` | SPEC_PATH, WORKING_DIRECTORY, PROJECT_CONTEXT, CONSTRAINTS |
 | `architect` | QUESTION, CODE_CONTEXT, CONSTRAINTS, PRIOR_ATTEMPTS, DECISION_OWNER |
+| `curator` | WORKING_DIRECTORY, TASK_DESCRIPTION, PLAN_OR_SPEC, BASE_SHA, HEAD_SHA, IMPLEMENTER_REPORT, REVIEWER_REPORTS, EXISTING_INDEX |
 
 ## Adding a new agent
 
@@ -86,3 +88,4 @@ Task(
 | `reviewer-migration-safety.md` | Production-safe Alembic migrations |
 | `planner.md` | Spec → plan |
 | `architect.md` | Design consultation |
+| `curator.md` | Distills patterns + gotchas from completed branches into `knowledge/` |
