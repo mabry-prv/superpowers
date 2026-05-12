@@ -9,3 +9,4 @@
 
 - **oversized** — Topic has an entry that exceeds 200 words — `gotchas/oversized.md`
 - **dangling-sha** — Entry references a SHA that no longer exists — `gotchas/dangling-sha.md`
+- **missing-source** — Sample entry deliberately missing the Source line — `gotchas/missing-source.md`
