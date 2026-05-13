@@ -69,6 +69,33 @@ Soft guideline (lint warns on missing structure; doesn't fail):
 
 No generic advice ("use clean code", "write tests"). Every entry must be specific to THIS codebase.
 
+### Source line
+
+Every entry MUST end with a `**Source:**` line. Three valid forms:
+
+- `**Source:** <URL>` — any string starting with `http://` or `https://`. Use when canonical documentation supports the entry.
+- `**Source:** observed_locally_unvetted` — use when the entry captures a local observation the curator couldn't ground against canonical sources.
+- `**Source:** observed_locally_unvetted (<optional hint>)` — same as above, with a short parenthetical hint (e.g. `observed_locally_unvetted (vetting skipped — exa/Ref unavailable)`).
+
+Anything else is a lint error (hard). See `scripts/lint-knowledge.sh` Check 4b.
+
+Example:
+
+```markdown
+### 2026-05-11 — BaseHTTPMiddleware breaks ContextVars (since abc1234)
+
+Using `BaseHTTPMiddleware` from Starlette loses request-scoped ContextVars
+between middleware and the route handler.
+
+**Why:** Starlette runs `BaseHTTPMiddleware` via a TaskGroup; ContextVar
+writes inside it don't propagate to the route handler's task.
+
+**Avoid:** use pure ASGI middleware (`call/await scope, receive, send`)
+for anything that mutates ContextVars.
+
+**Source:** https://github.com/encode/starlette/issues/1273
+```
+
 ## Naming
 
 - Topic slugs: lowercase, hyphens. `auth.md`, `migrations.md`, `auth-session.md`.

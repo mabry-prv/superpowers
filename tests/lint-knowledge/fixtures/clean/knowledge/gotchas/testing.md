@@ -16,3 +16,5 @@ pytest-asyncio fixtures must declare `loop_scope="session"` when shared.
 **Why:** event-loop binding mismatch causes "Future attached to a different loop" flakes.
 
 **How:** add `@pytest_asyncio.fixture(loop_scope="session")` to shared async fixtures.
+
+**Source:** observed_locally_unvetted

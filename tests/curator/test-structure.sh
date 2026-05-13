@@ -81,6 +81,34 @@ else
     fail "finishing-a-development-branch skill not yet updated (Task 10)"
 fi
 
+# --- New assertions for vetting layer ---
+
+# Step 0: using-project-knowledge invocation
+assert_grep "$AGENT" 'Before You Begin' "section: Before You Begin (new)"
+assert_grep "$AGENT" 'superpowers:using-project-knowledge' "step 0: using-project-knowledge invocation"
+
+# Pre-write vetting step
+assert_grep "$AGENT" '[Pp]re-write vetting|vetting.*per candidate|vet.*candidate' "vetting: pre-write step present"
+assert_grep "$AGENT" 'mcp__exa__|mcp__ref__' "vetting: MCP prefix detection documented"
+assert_grep "$AGENT" 'exa/Ref unavailable|exa.Ref unavailable' "vetting: degraded-mode phrase present"
+
+# Three classifications
+assert_grep "$AGENT" 'Confirms|Confirmed' "vetting: Confirms classification"
+assert_grep "$AGENT" 'No relevant hit|no relevant hit|Unvetted' "vetting: Unvetted classification"
+assert_grep "$AGENT" 'Contradicts|Contradicted' "vetting: Contradicts classification"
+
+# **Source:** emission rule
+assert_grep "$AGENT" '\*\*Source:\*\*' "Source line: emission rule present"
+assert_grep "$AGENT" 'observed_locally_unvetted' "Source: observed_locally_unvetted form documented"
+assert_grep "$AGENT" 'http://|https://|<URL>' "Source: URL form documented"
+
+# Extended report — Flagged for review block when contradictions
+assert_grep "$AGENT" 'Flagged for review|Flagged for user review' "report: Flagged-for-review block"
+assert_grep "$AGENT" 'NOT written|not written|did not write' "report: Flagged entries NOT written"
+
+# Anti-pattern: no silent downgrade
+assert_grep "$AGENT" 'silently downgrade|silent downgrade|silently mark as observed_locally_unvetted' "anti-pattern: no silent downgrade of contradictions"
+
 echo ""
 echo "Results: $passed passed, $failed failed"
 [ "$failed" -eq 0 ] || exit 1

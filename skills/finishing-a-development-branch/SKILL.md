@@ -78,6 +78,27 @@ EXISTING_INDEX: <contents of knowledge/INDEX.md, empty if first run>
   ```
   Wait for the user to commit (or explicitly skip).
 
+- **Flagged for review** (when the curator's report includes a "Flagged for review" block — canonical sources contradicted one or more candidates):
+
+  ```
+  The curator wrote N entries and flagged M candidates because canonical
+  guidance contradicts them. For each one:
+
+    (a) accept canonical, skip the entry (no write — canonical wins)
+    (b) write as observed_locally_unvetted (you disagree with canonical;
+        the entry lands with a note that vetting was overridden)
+    (c) edit to align with canonical (dispatch the reviser agent to
+        produce a rewrite aligned with the canonical source)
+  ```
+
+  Prompt the user per flagged entry. Execute the chosen option:
+
+  - **(a) accept canonical** — no further action; the entry was already not written by the curator. Note it in the branch summary.
+  - **(b) write as observed_locally_unvetted** — append the entry manually to `<entry_path>` under the topic's `## Entries` section. Use the entry shape documented in `docs/knowledge-schema.md` (dated H3 `### YYYY-MM-DD — <title> (since <HEAD_SHA>)`, body with **Why:** / **Avoid:** lines, and `**Source:** observed_locally_unvetted (user override of canonical contradiction at <URL>)` as the final line). INDEX.md does not need updating if the topic already exists.
+  - **(c) edit to align** — build the reviser's 5-field per-call block and `Task(subagent_type=reviser, ...)`. On reviser DONE, run `git diff <entry_path>` and present the standard commit/edit/discard prompt.
+
+  Resolve all flagged entries before proceeding to Step 3. Do not auto-resolve.
+
 - **NOTHING_TO_LEARN** — proceed silently to Step 3. No knowledge writes.
 
 - **NEEDS_CONTEXT — <field>** — surface the gap:

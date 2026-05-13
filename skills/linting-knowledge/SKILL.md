@@ -46,11 +46,14 @@ The script writes its report to `<knowledge-dir>/_meta/lint-report.md` and exits
 
 Read `knowledge/_meta/lint-report.md`. Three sections of interest:
 
-- **Errors** — orphan INDEX hooks, missing frontmatter, dangling since-SHAs. Must be fixed before next merge.
+- **Errors** — orphan INDEX hooks, missing frontmatter, dangling since-SHAs, **missing or malformed `**Source:**` lines (Check 4b)**. Must be fixed before next merge.
 - **Warnings** — oversized entries (>200 words), oversized topics (>300 lines), missing Why/How/Avoid structure. Soft; user judgment.
 - **Suggestions** — possible duplicates flagged by title overlap. Human review required.
 
 ### Step 3: Surface Findings
+
+- For missing-Source errors (lint report line begins with `missing **Source:** line`): print the entry's topic-path and title; suggest either (a) re-running curator with vetting (to attempt URL discovery), (b) appending `**Source:** observed_locally_unvetted`, or (c) running `scripts/backfill-knowledge-sources.sh` for bulk backfill.
+- For malformed-Source errors (lint report line begins with `malformed **Source:** value`): print the topic-path, title, and the offending value; show the three valid forms (URL / `observed_locally_unvetted` / `observed_locally_unvetted (hint)`).
 
 For each error: print `file:line` (or topic name), what's wrong, how to fix.
 For warnings + suggestions: print summary; offer to walk through.

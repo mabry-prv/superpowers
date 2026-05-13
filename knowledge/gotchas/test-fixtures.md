@@ -1,8 +1,8 @@
 ---
 topic: test-fixtures
 category: gotchas
-last-updated: 2026-05-11
-last-since: 52c7c83
+last-updated: 2026-05-13
+last-since: f2aece5
 ---
 
 # Test-fixture gotchas
@@ -27,6 +27,8 @@ that the fixture's measured value is on the wrong side of the threshold
 before committing — or stamp the threshold + actual count in a comment
 at the top of the fixture so drift is obvious.
 
+**Source:** observed_locally_unvetted
+
 ### 2026-05-11 — Curator test regex is literal-phrase-sensitive (since aae076d)
 
 `tests/curator/test-structure.sh:60` matches one of three literal
@@ -49,3 +51,30 @@ Any future librarian-family agent that uses different phrasing
 **Avoid:** when editing `agents/*.md` anti-pattern bullets, grep the
 matching `tests/*/test-structure.sh` for literal-string assertions and
 either keep the phrasing or update both files together.
+
+**Source:** observed_locally_unvetted
+
+### 2026-05-13 — Integration tests must SKIP on rc=0 AND missing artifact (since f2aece5)
+
+When an integration test invokes `claude` and asserts on a written
+file (e.g. `hooks.txt`), the test must SKIP cleanly on TWO conditions:
+(a) rc≠0 — CLI-shape mismatch, and (b) rc=0 BUT the artifact is
+missing — recursive in-session invocation cannot approve Write tool
+calls without `--permission-mode acceptEdits`. See
+`tests/using-project-knowledge/test-integration.sh:50-66` for the
+canonical guard.
+
+**Why:** the integration scaffolds run inside the same Claude Code
+session that's executing the test runner. The nested `claude`
+sub-invocation inherits a restricted permission scope and silently
+returns rc=0 with no writes when it cannot prompt for tool approval.
+A naive "assert artifact exists" would FAIL on every clean run from a
+nested session — a false negative.
+
+**Avoid:** when writing a new integration scaffold that asserts on a
+file the inner agent must Write, copy the two-stage SKIP guard:
+first check rc, then check artifact presence, then assert content.
+The structural test (`test-structure.sh`) is the load-bearing safety
+net; integration scaffolds are best-effort.
+
+**Source:** observed_locally_unvetted

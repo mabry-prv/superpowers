@@ -42,6 +42,7 @@ assert_report_contains "$BAD_REPORT" 'orphan-hook|patterns/orphan-hook' "detects
 assert_report_contains "$BAD_REPORT" 'no-frontmatter|missing frontmatter' "detects missing frontmatter"
 assert_report_contains "$BAD_REPORT" 'oversized|>200 words' "detects oversized entry"
 assert_report_contains "$BAD_REPORT" 'dangling|since.*does not resolve|cat-file' "detects dangling since-SHA"
+assert_report_contains "$BAD_REPORT" 'missing \*\*Source:\*\*|missing Source line|malformed \*\*Source:\*\*' "Check 4b: detects missing Source line"
 
 echo ""
 echo "========================================"
@@ -55,6 +56,13 @@ assert_exit_code "$clean_exit" 0 "lint exits 0 on clean fixture"
 
 CLEAN_REPORT="$CLEAN/_meta/lint-report.md"
 assert_report_clean "$CLEAN_REPORT" "clean fixture produces no errors"
+
+# Sanity-check that the clean fixture exercises all three valid Source forms
+grep -h '^\*\*Source:\*\* ' "$CLEAN/patterns/auth.md" "$CLEAN/gotchas/testing.md" > /tmp/clean-sources.txt
+if grep -q '^\*\*Source:\*\* https\?://' /tmp/clean-sources.txt; then pass "clean fixture: URL form present"; else fail "clean fixture: URL form missing"; fi
+if grep -qE '^\*\*Source:\*\* observed_locally_unvetted$' /tmp/clean-sources.txt; then pass "clean fixture: literal unvetted form present"; else fail "clean fixture: literal unvetted form missing"; fi
+if grep -qE '^\*\*Source:\*\* observed_locally_unvetted \(' /tmp/clean-sources.txt; then pass "clean fixture: parenthetical-hint form present"; else fail "clean fixture: parenthetical-hint form missing"; fi
+rm -f /tmp/clean-sources.txt
 
 echo ""
 echo "Results: $passed passed, $failed failed"

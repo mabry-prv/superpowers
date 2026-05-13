@@ -23,6 +23,7 @@ If any are missing or unclear, ask the dispatcher before starting.
 
 ## Before You Begin
 
+0. Invoke `Skill('superpowers:using-project-knowledge')`. The skill will surface the project knowledge index (if any) into your context.
 1. Read `SPEC_PATH` in full.
 2. Confirm the spec is single-scope (not multiple independent subsystems). If it covers multiple subsystems, surface this to the dispatcher and request a decomposition before proceeding — each plan should produce working, testable software on its own.
 3. If you have questions about scope, sequencing, or assumptions, ask the dispatcher before writing the plan.

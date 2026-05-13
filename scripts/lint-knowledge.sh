@@ -68,6 +68,55 @@ while IFS= read -r topic; do
     fi
 done < <(find "$KNOWLEDGE" -type f -name '*.md' ! -path "$INDEX" ! -path "$META/*")
 
+# 4b. Every entry has a **Source:** line matching one of three valid forms.
+#     Valid: starts with http:// or https://; equals observed_locally_unvetted;
+#     starts with "observed_locally_unvetted (". Anything else: hard error.
+while IFS= read -r topic; do
+    [ -z "$topic" ] && continue
+    # Walk entries inside the topic; for each entry section search the body
+    # for ^**Source:** lines and classify. Use awk to split into per-entry
+    # streams keyed by entry title.
+    while IFS=$'\t' read -r entry_title source_value; do
+        [ -z "$entry_title" ] && continue
+        if [ -z "$source_value" ]; then
+            err "missing **Source:** line in entry: $topic:$entry_title"
+            continue
+        fi
+        # Validate the value matches one of the three accepted forms.
+        case "$source_value" in
+            "http://"*|"https://"*) : ;;  # URL form — OK
+            "observed_locally_unvetted") : ;;  # literal — OK
+            "observed_locally_unvetted ("*) : ;;  # parenthetical hint — OK
+            *)
+                err "malformed **Source:** value in entry: $topic:$entry_title (got: $source_value)"
+                ;;
+        esac
+    done < <(awk '
+        /^### / {
+            if (in_entry) {
+                # Emit a TAB-separated record: title<TAB>source_value
+                # (source_value is empty when no Source line was found)
+                print prev_title "\t" source
+            }
+            in_entry = 1
+            prev_title = $0
+            sub(/^### /, "", prev_title)
+            source = ""
+            next
+        }
+        in_entry && /^\*\*Source:\*\* / {
+            # Strip the marker, keep the value verbatim
+            line = $0
+            sub(/^\*\*Source:\*\* /, "", line)
+            source = line
+            next
+        }
+        END {
+            if (in_entry) print prev_title "\t" source
+        }
+    ' "$topic")
+done < <(find "$KNOWLEDGE" -type f -name '*.md' ! -path "$INDEX" ! -path "$META/*")
+
 # 5. SHA resolution via git cat-file (catches dangling SHAs after rebase/squash)
 #    Only run if we're inside a git repo
 if git -C "$(dirname "$KNOWLEDGE")" rev-parse --git-dir >/dev/null 2>&1; then

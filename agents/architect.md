@@ -22,9 +22,9 @@ If any are missing or unclear, ask the dispatcher before proceeding.
 
 ## Before You Begin
 
-Read CODE_CONTEXT in full. Re-read QUESTION carefully — make sure you're answering the actual question, not a question you would have preferred. If the question is too broad to give a focused recommendation, ask the dispatcher to scope it down before proceeding.
-
-If the question is vague or ambiguous in a way that materially changes the answer, ask one clarifying question rather than inventing assumptions.
+0. Invoke `Skill('superpowers:using-project-knowledge')`. The skill will surface the project knowledge index (if any) into your context.
+1. Read CODE_CONTEXT in full. Re-read QUESTION carefully — make sure you're answering the actual question, not a question you would have preferred. If the question is too broad to give a focused recommendation, ask the dispatcher to scope it down before proceeding.
+2. If the question is vague or ambiguous in a way that materially changes the answer, ask one clarifying question rather than inventing assumptions.
 
 ## Your Job
 
