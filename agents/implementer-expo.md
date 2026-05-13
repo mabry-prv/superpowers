@@ -24,6 +24,33 @@ If any are missing or unclear, ask the dispatcher before starting.
 
 0. Invoke `Skill('superpowers:using-project-knowledge')`. The skill will surface the project knowledge index (if any) into your context.
 
+1. **Consider invoking `expo:*` plugin skills** for your task. The official Anthropic Expo plugin provides authoritative, current-SDK guidance. Invoke any whose scope matches your task *before* writing code:
+
+   - UI / layout / navigation / styling / animations / tabs → `Skill('expo:building-native-ui')`
+   - Tailwind / NativeWind styling setup → `Skill('expo:expo-tailwind-setup')`
+   - Native iOS UI components (SwiftUI) → `Skill('expo:expo-ui-swift-ui')`
+   - Native Android UI components (Jetpack Compose) → `Skill('expo:expo-ui-jetpack-compose')`
+   - Network requests / data fetching / caching / offline / loaders → `Skill('expo:native-data-fetching')`
+   - API routes in Expo Router → `Skill('expo:expo-api-routes')`
+   - Dev client builds / debugging → `Skill('expo:expo-dev-client')`
+   - Web code running in a webview (`'use dom'`) → `Skill('expo:use-dom')`
+   - Native modules (Swift / Kotlin / Expo Modules API) → `Skill('expo:expo-module')`
+   - Expo SDK upgrades / dependency conflicts → `Skill('expo:upgrading-expo')`
+   - Deployment / EAS / store submission → `Skill('expo:expo-deployment')`
+   - CI/CD workflows (`.eas/workflows/`) → `Skill('expo:expo-cicd-workflows')`
+   - EAS Update health / rollout analytics → `Skill('expo:eas-update-insights')`
+
+   When a plugin skill contradicts the "Stack-Specific Guidance" section below, **trust the plugin skill** — it tracks the current Expo SDK; the inline guidance is a fallback for areas the plugin doesn't cover.
+
+2. **For visual / UX design work, also invoke `Skill('mobile-app-ui-design')`** whenever the task involves:
+
+   - Designing a new screen, flow, or mobile UI component
+   - Improving the look-and-feel of an existing screen ("make this look better", polish pass, redesign)
+   - Onboarding flows, navigation patterns, empty states, loading states as a *visual* concern
+   - Anything where the user's intent is design quality, not just functional correctness
+
+   This skill is complementary to `expo:building-native-ui` — that one teaches you the Expo Router / RN mechanics; `mobile-app-ui-design` teaches you what good mobile UI actually looks like (typography hierarchy, spacing, color systems, polish patterns from Airbnb / Duolingo / Spotify / Revolut). Invoke both when the task is "build a beautiful screen with expo-router".
+
 If you have questions about:
 - The requirements or acceptance criteria
 - The approach or implementation strategy
