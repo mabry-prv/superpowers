@@ -14,14 +14,21 @@ The skills trigger automatically. You don't do anything special.
 
 ## Installation
 
-This fork is set up as a local Claude Code plugin marketplace.
+This fork is set up as a Claude Code plugin marketplace. Install from GitHub or from a local clone.
+
+**From GitHub:**
 
 ```bash
-/plugin marketplace add /Users/marcin/Projects/superpowers
+/plugin marketplace add mabry-prv/superpowers
 /plugin install superpowers@superpowers-personal
 ```
 
-(Or point at a remote git URL if you push it somewhere.)
+**From a local clone:**
+
+```bash
+/plugin marketplace add /path/to/superpowers
+/plugin install superpowers@superpowers-personal
+```
 
 ## The Basic Workflow
 
